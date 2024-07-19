@@ -10,6 +10,10 @@ const userSchema = new mongoose.Schema({
     required: [true, "Email is required"],
     unique: true,
   },
+  emailValidated: {
+    type: Boolean,
+    default: false,
+  },
   password: {
     type: String,
     required: [true, "Password is required"],
@@ -21,6 +25,11 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: ["USER_ROLE"],
     enum: ["ADMIN_ROLE", "USER_ROLE", "RESELLER_ROLE"],
+  },
+  state: {
+    type: [String],
+    default: ["ACTIVE"],
+    enum: ["ACTIVE", "SUSPENDED", "DISABLED"],
   },
 });
 
