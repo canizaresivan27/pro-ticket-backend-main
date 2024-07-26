@@ -26,7 +26,17 @@ export class ProjectController {
   };
 
   getProject = async (req: Request, res: Response) => {
-    res.json("GetProject");
+    this.projectServices
+      .getProjects()
+      .then((projects) => res.status(201).json(projects))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  getOneProject = async (req: Request, res: Response) => {
+    this.projectServices
+      .getProjectById(req.body)
+      .then((project) => res.status(201).json(project))
+      .catch((error) => this.handleError(error, res));
   };
 
   updateProject = async (req: Request, res: Response) => {

@@ -9,6 +9,7 @@ export class ProjectRoutes {
     const controller = new ProjectController(projectServices);
 
     router.get("/", controller.getProject);
+    router.get("/id", controller.getOneProject);
     router.post("/", controller.createProject);
     router.put("/", controller.updateProject);
     router.delete("/", controller.deleteProject);
