@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { ProjectController } from "./controller";
+import { ProjectServices } from "../services";
 
 export class ProjectRoutes {
   static get routes(): Router {
     const router = Router();
-
-    const controller = new ProjectController();
+    const projectServices = new ProjectServices();
+    const controller = new ProjectController(projectServices);
 
     router.get("/", controller.getProject);
     router.post("/", controller.createProject);

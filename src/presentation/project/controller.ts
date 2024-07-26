@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { CreateProjectDto, CustomError } from "../../domain";
+import { ProjectServices } from "../services";
 
 export class ProjectController {
   // DI
-  constructor() {}
+  constructor(private readonly projectServices: ProjectServices) {}
 
   private handleError = (error: unknown, res: Response) => {
     if (error instanceof CustomError) {
@@ -18,7 +19,10 @@ export class ProjectController {
     const [error, createProjectDto] = CreateProjectDto.create(req.body);
     if (error) return res.status(400).json({ error });
 
-    res.json(createProjectDto);
+    this.projectServices
+      .createProject(createProjectDto!, req.body.user)
+      .then((project) => res.status(201).json(project))
+      .catch((error) => this.handleError(error, res));
   };
 
   getProject = async (req: Request, res: Response) => {
