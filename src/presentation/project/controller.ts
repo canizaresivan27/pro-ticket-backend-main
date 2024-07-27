@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { CreateProjectDto, CustomError } from "../../domain";
+import {
+  CreateProjectDto,
+  CustomError,
+  GetProjectByIdDto,
+  PaginationDto,
+} from "../../domain";
 import { ProjectServices } from "../services";
 
 export class ProjectController {
@@ -26,15 +31,22 @@ export class ProjectController {
   };
 
   getProject = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const [error, paginationDto] = PaginationDto.create(+page, +limit);
+    if (error) return res.status(400).json({ error });
+
     this.projectServices
-      .getProjects()
+      .getProjects(paginationDto!)
       .then((projects) => res.status(201).json(projects))
       .catch((error) => this.handleError(error, res));
   };
 
-  getOneProject = async (req: Request, res: Response) => {
+  projectById = async (req: Request, res: Response) => {
+    const [error, getProjectByIdDto] = GetProjectByIdDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
     this.projectServices
-      .getProjectById(req.body)
+      .getProjectById(getProjectByIdDto!)
       .then((project) => res.status(201).json(project))
       .catch((error) => this.handleError(error, res));
   };

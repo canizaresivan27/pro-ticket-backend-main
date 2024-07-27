@@ -1,5 +1,11 @@
 import { ProjectModel } from "../../data";
-import { CreateProjectDto, CustomError, UserEntity } from "../../domain";
+import {
+  CreateProjectDto,
+  CustomError,
+  GetProjectByIdDto,
+  PaginationDto,
+  UserEntity,
+} from "../../domain";
 
 export class ProjectServices {
   //DI
@@ -31,24 +37,40 @@ export class ProjectServices {
     }
   }
 
-  async getProjects() {
-    try {
-      const projects = await ProjectModel.find();
+  async getProjects(paginationDto: PaginationDto) {
+    const { page, limit } = paginationDto;
 
-      return projects.map((project) => ({
-        id: project.id,
-        name: project.name,
-        totalTickets: project.raffleConfig.totalTickets,
-        state: project.state,
-      }));
+    try {
+      const [total, projects] = await Promise.all([
+        ProjectModel.countDocuments(),
+        ProjectModel.find()
+          .skip((page - 1) * limit)
+          .limit(limit),
+      ]);
+
+      return {
+        page: page,
+        limit: limit,
+        total: total,
+        next: `/api/projects?page=${page + 1}&limit=${limit}`,
+        prev:
+          page - 1 > 0 ? `/api/projects?page=${page - 1}&limit=${limit}` : null,
+
+        projects: projects.map((project) => ({
+          id: project.id,
+          name: project.name,
+          totalTickets: project.raffleConfig.totalTickets,
+          state: project.state,
+        })),
+      };
     } catch (error) {
       throw CustomError.internalServer(`Internal Server Error`);
     }
   }
 
-  async getProjectById(body: any) {
+  async getProjectById(getProjectByIdDto: GetProjectByIdDto) {
     try {
-      const project = await ProjectModel.findById(body.id);
+      const project = await ProjectModel.findById(getProjectByIdDto.projectId);
       if (!project) throw CustomError.badRequest("Project not exists");
 
       return { project };
