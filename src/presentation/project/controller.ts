@@ -25,7 +25,7 @@ export class ProjectController {
     if (error) return res.status(400).json({ error });
 
     this.projectServices
-      .createProject(createProjectDto!, req.body.user)
+      .createProject(createProjectDto!)
       .then((project) => res.status(201).json(project))
       .catch((error) => this.handleError(error, res));
   };

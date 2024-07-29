@@ -11,7 +11,7 @@ export class ProjectServices {
   //DI
   constructor() {}
 
-  async createProject(createProjectDto: CreateProjectDto, user: UserEntity) {
+  async createProject(createProjectDto: CreateProjectDto) {
     const projectExist = await ProjectModel.findOne({
       name: createProjectDto.name,
     });
@@ -20,17 +20,11 @@ export class ProjectServices {
     try {
       const project = new ProjectModel({
         ...createProjectDto,
-        user: user.id,
       });
 
       await project.save();
 
-      return {
-        id: project.id,
-        name: project.name,
-        state: project.state,
-        config: project.raffleConfig,
-      };
+      return project;
     } catch (error) {
       console.log({ error });
       throw CustomError.internalServer(`Internal Server Error`);
@@ -45,7 +39,8 @@ export class ProjectServices {
         ProjectModel.countDocuments(),
         ProjectModel.find()
           .skip((page - 1) * limit)
-          .limit(limit),
+          .limit(limit)
+          .populate("owner"),
       ]);
 
       return {
@@ -61,6 +56,7 @@ export class ProjectServices {
           name: project.name,
           totalTickets: project.raffleConfig.totalTickets,
           state: project.state,
+          owner: project.owner,
         })),
       };
     } catch (error) {
@@ -72,7 +68,7 @@ export class ProjectServices {
     try {
       const project = await ProjectModel.findById(
         getProjectByIdDto.projectId
-      ).populate("user");
+      ).populate("owner");
 
       if (!project) throw CustomError.badRequest("Project not exists");
 

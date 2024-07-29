@@ -1,3 +1,5 @@
+import { Validators } from "../../../config";
+
 export class CreateProjectDto {
   constructor(
     public readonly name: string,
@@ -9,18 +11,24 @@ export class CreateProjectDto {
       qrPosition: string;
       numberPosition: string;
     },
-    public readonly state: string = "ACTIVE" //public readonly user: string
+    public readonly owner: string, // ID
+    public readonly state: string = "ACTIVE" //public readonly owner: string
   ) {}
 
   static create(object: { [key: string]: any }): [string?, CreateProjectDto?] {
-    const { name, date, raffleConfig, state } = object;
+    const { name, date, raffleConfig, owner, state } = object;
 
     if (!name) return ["Missing name"];
     if (!date || !date.start || !date.end) return ["Missing or invalid date"];
     if (!raffleConfig) return ["Missing raffleConfig"];
     if (!raffleConfig.totalTickets) return ["Missing totalTickets"];
     if (!raffleConfig.perTicket) return ["Missing perTicket"];
+    if (!owner) return ["Missing owner"];
+    if (!Validators.isMongoID(owner)) return ["Invalid owner Id"];
 
-    return [undefined, new CreateProjectDto(name, date, raffleConfig, state)];
+    return [
+      undefined,
+      new CreateProjectDto(name, date, raffleConfig, owner, state),
+    ];
   }
 }

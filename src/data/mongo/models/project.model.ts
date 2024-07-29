@@ -51,7 +51,7 @@ const projectSchema = new mongoose.Schema({
     default: "ACTIVE",
     enum: ["ACTIVE", "SUSPENDED", "FINISHED", "CANCELLED"],
   },
-  user: {
+  owner: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
