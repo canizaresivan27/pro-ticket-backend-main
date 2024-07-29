@@ -2,13 +2,17 @@ import mongoose, { Schema } from "mongoose";
 
 const ticketSchema = new mongoose.Schema({
   number: {
-    type: [Number],
-    required: [true, "Number is required"],
+    type: Number,
+    required: [true, "Number are required"],
     unique: true,
+  },
+  date: {
+    type: String,
+    required: true,
   },
   qr: {
     type: String,
-    required: [false, "QR is required"],
+    required: true,
   },
   price: {
     type: Number,
@@ -19,38 +23,15 @@ const ticketSchema = new mongoose.Schema({
     of: Schema.Types.Mixed,
     default: {},
   },
-  history: {
-    type: [Object],
-    default: {
-      note: {
-        type: String,
-      },
-      date: {
-        type: String,
-        required: [true, "Date is required"],
-      },
-      amount: {
-        type: Number,
-        required: [true, "Amount is required"],
-      },
-      badge: {
-        type: [String],
-        default: ["VES"],
-        enum: ["VES", "USD", "COP"],
-      },
-      paymentType: {
-        type: [String],
-        default: ["CASH"],
-        enum: ["CASH", "TRANSFER"],
-      },
-      ref: {
-        type: String,
-      },
+  history: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "History",
     },
-  },
+  ],
   state: {
-    type: [String],
-    default: ["UNPAID"],
+    type: String,
+    default: "UNPAID",
     enum: ["PAID", "UNPAID", "CANCELLED"],
   },
   project: {
@@ -58,6 +39,11 @@ const ticketSchema = new mongoose.Schema({
     ref: "Project",
     required: true,
   },
+  seller: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
-export const TickettModel = mongoose.model("Ticket", ticketSchema);
+export const TicketModel = mongoose.model("Ticket", ticketSchema);

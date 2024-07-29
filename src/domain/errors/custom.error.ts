@@ -1,3 +1,5 @@
+import { error } from "console";
+
 export class CustomError extends Error {
   private constructor(
     public readonly statusCode: number,
