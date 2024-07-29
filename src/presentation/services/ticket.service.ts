@@ -6,18 +6,17 @@ export class TicketServices {
 
   async createTicket(createTicketDto: CreateTicketDto) {
     const ticketExist = await TicketModel.findOne({
-      name: createTicketDto.number,
+      number: createTicketDto.number,
     });
-    if (ticketExist) throw CustomError.badRequest("Ticket already exists <<");
+    if (ticketExist) throw CustomError.badRequest("Ticket already exists");
 
     try {
       const ticket = new TicketModel({
         ...createTicketDto,
+        price: 10,
+        date: new Date(),
+        qr: Math.random().toString(),
       });
-
-      ticket.price = 10;
-      ticket.date = "121321";
-      ticket.qr = Math.random().toString();
 
       await ticket.save();
 
