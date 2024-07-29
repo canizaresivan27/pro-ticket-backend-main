@@ -35,10 +35,11 @@ export class TicketServices {
         TicketModel.countDocuments(),
         TicketModel.find()
           .skip((page - 1) * limit)
-          .limit(limit),
-        //todo: populate
+          .limit(limit)
+          .populate("seller", "name email role"), // add data in relation database
       ]);
 
+      //
       return {
         page: page,
         limit: limit,
@@ -47,12 +48,7 @@ export class TicketServices {
         prev:
           page - 1 > 0 ? `/api/tickets?page=${page - 1}&limit=${limit}` : null,
 
-        tickets: tickets.map((ticket) => ({
-          id: ticket.id,
-          number: ticket.number,
-          data: ticket.ownerData,
-          state: ticket.state,
-        })),
+        tickets: tickets,
       };
     } catch (error) {
       throw CustomError.internalServer(`Internal Server Error`);

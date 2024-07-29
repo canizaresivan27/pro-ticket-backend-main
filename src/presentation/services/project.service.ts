@@ -70,7 +70,10 @@ export class ProjectServices {
 
   async getProjectById(getProjectByIdDto: GetProjectByIdDto) {
     try {
-      const project = await ProjectModel.findById(getProjectByIdDto.projectId);
+      const project = await ProjectModel.findById(
+        getProjectByIdDto.projectId
+      ).populate("user");
+
       if (!project) throw CustomError.badRequest("Project not exists");
 
       return { project };

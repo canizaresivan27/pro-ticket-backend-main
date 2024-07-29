@@ -46,4 +46,12 @@ const ticketSchema = new mongoose.Schema({
   },
 });
 
+ticketSchema.set("toJSON", {
+  virtuals: true, // add ID like [id: ""] and not this [_id: " "]
+  versionKey: false, // << remove version "__v:0"
+  transform: function (doc, ret, options) {
+    delete ret._id; // remove "_id"
+  },
+});
+
 export const TicketModel = mongoose.model("Ticket", ticketSchema);

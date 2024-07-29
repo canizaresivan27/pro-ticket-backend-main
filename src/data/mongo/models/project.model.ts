@@ -58,4 +58,20 @@ const projectSchema = new mongoose.Schema({
   },
 });
 
+projectSchema.set("toJSON", {
+  virtuals: true, // add ID like [id: ""] and not this [_id: " "]
+  versionKey: false, // << remove version "__v:0"
+  transform: function (doc, ret, options) {
+    delete ret._id; // remove "_id"
+  },
+});
+
+raffleConfigSchema.set("toJSON", {
+  virtuals: true, // add ID like [id: ""] and not this [_id: " "]
+  versionKey: false, // << remove version "__v:0"
+  transform: function (doc, ret, options) {
+    delete ret._id; // remove "_id"
+  },
+});
+
 export const ProjectModel = mongoose.model("Project", projectSchema);
