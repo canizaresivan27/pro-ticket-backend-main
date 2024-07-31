@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import {
   CreateProjectDto,
   CustomError,
+  DeleteProjectDto,
   GetProjectByIdDto,
   PaginationDto,
+  UpdateProjectDto,
 } from "../../domain";
 import { ProjectServices } from "../services";
 
@@ -52,10 +54,22 @@ export class ProjectController {
   };
 
   updateProject = async (req: Request, res: Response) => {
-    res.json("Update Project");
+    const [error, updateProjectDto] = UpdateProjectDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.projectServices
+      .updateProject(updateProjectDto!)
+      .then((project) => res.status(201).json(project))
+      .catch((error) => this.handleError(error, res));
   };
 
   deleteProject = async (req: Request, res: Response) => {
-    res.json("Delete Project");
+    const [error, deleteProjectDto] = DeleteProjectDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.projectServices
+      .deleteProject(deleteProjectDto!)
+      .then((project) => res.status(201).json(project))
+      .catch((error) => this.handleError(error, res));
   };
 }

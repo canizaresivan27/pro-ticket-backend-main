@@ -2,8 +2,10 @@ import { ProjectModel } from "../../data";
 import {
   CreateProjectDto,
   CustomError,
+  DeleteProjectDto,
   GetProjectByIdDto,
   PaginationDto,
+  UpdateProjectDto,
   UserEntity,
 } from "../../domain";
 
@@ -78,4 +80,57 @@ export class ProjectServices {
       throw CustomError.internalServer(`Internal Server Error`);
     }
   }
+
+  updateProject = async (updateProjectDto: UpdateProjectDto) => {
+    const nameConflict = await ProjectModel.findOne({
+      name: updateProjectDto.name,
+      _id: { $ne: updateProjectDto.id }, // Exclude the current project
+    });
+    if (nameConflict)
+      throw CustomError.badRequest("Project name already exists");
+
+    const projectExist = await ProjectModel.findById(updateProjectDto.id);
+    if (!projectExist) throw CustomError.badRequest("Project not found");
+
+    try {
+      const updateFields: any = {};
+
+      if (updateProjectDto.name !== undefined)
+        updateFields.name = updateProjectDto.name;
+      if (updateProjectDto.date !== undefined)
+        updateFields.date = updateProjectDto.date;
+      if (updateProjectDto.raffleConfig !== undefined) {
+        updateFields.raffleConfig = {
+          ...projectExist.raffleConfig, // Keep existing fields
+          ...updateProjectDto.raffleConfig, // Overwrite only the fields provided
+        };
+      }
+      if (updateProjectDto.state !== undefined)
+        updateFields.state = updateProjectDto.state;
+
+      const updatedProject = await ProjectModel.findByIdAndUpdate(
+        updateProjectDto.id,
+        updateFields,
+        { new: true }
+      ).populate("owner");
+
+      return updatedProject;
+    } catch (error) {
+      console.log(error);
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  };
+
+  deleteProject = async (deleteProjectDto: DeleteProjectDto) => {
+    const projectExist = await ProjectModel.findById(deleteProjectDto.id);
+    if (!projectExist) throw CustomError.badRequest("Project not found");
+
+    try {
+      await ProjectModel.findByIdAndDelete(deleteProjectDto.id);
+      return { message: "Project deleted successfully" };
+    } catch (error) {
+      console.log(error);
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  };
 }
