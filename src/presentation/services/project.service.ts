@@ -67,14 +67,14 @@ export class ProjectServices {
   }
 
   async getProjectById(getProjectByIdDto: GetProjectByIdDto) {
+    const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
+    if (!projectExist) throw CustomError.badRequest("Project not exists");
+
     try {
       const project = await ProjectModel.findById(
-        getProjectByIdDto.projectId
+        getProjectByIdDto.id
       ).populate("owner");
-
-      if (!project) throw CustomError.badRequest("Project not exists");
-
-      return { project };
+      return project;
     } catch (error) {
       console.log(error);
       throw CustomError.internalServer(`Internal Server Error`);
@@ -93,24 +93,14 @@ export class ProjectServices {
     if (!projectExist) throw CustomError.badRequest("Project not found");
 
     try {
-      const updateFields: any = {};
-
-      if (updateProjectDto.name !== undefined)
-        updateFields.name = updateProjectDto.name;
-      if (updateProjectDto.date !== undefined)
-        updateFields.date = updateProjectDto.date;
-      if (updateProjectDto.raffleConfig !== undefined) {
-        updateFields.raffleConfig = {
-          ...projectExist.raffleConfig, // Keep existing fields
-          ...updateProjectDto.raffleConfig, // Overwrite only the fields provided
-        };
-      }
-      if (updateProjectDto.state !== undefined)
-        updateFields.state = updateProjectDto.state;
-
       const updatedProject = await ProjectModel.findByIdAndUpdate(
         updateProjectDto.id,
-        updateFields,
+        {
+          name: updateProjectDto.name,
+          raffleConfig: updateProjectDto.raffleConfig,
+          owner: updateProjectDto.owner,
+          state: updateProjectDto.state,
+        },
         { new: true }
       ).populate("owner");
 

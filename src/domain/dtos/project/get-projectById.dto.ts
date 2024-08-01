@@ -1,11 +1,14 @@
+import { Validators } from "../../../config";
+
 export class GetProjectByIdDto {
-  private constructor(public readonly projectId: string) {}
+  private constructor(public readonly id: string) {}
 
   static create(object: { [key: string]: any }): [string?, GetProjectByIdDto?] {
-    const { projectId } = object;
+    const { id } = object;
 
-    if (!projectId) return ["Missing project ID"];
+    if (!id) return ["Missing project ID"];
+    if (!Validators.isMongoID(id)) return ["Invalid project Id"];
 
-    return [undefined, new GetProjectByIdDto(projectId)];
+    return [undefined, new GetProjectByIdDto(id)];
   }
 }

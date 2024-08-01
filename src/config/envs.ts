@@ -14,4 +14,5 @@ export const envs = {
   MAILER_SECRET_KEY: get("MAILER_SECRET_KEY").required().asString(),
 
   WEBSERVICE_URL: get("WEBSERVICE_URL").required().asString(),
+  QR_SEED: get("QR_SEED").required().asString(),
 };

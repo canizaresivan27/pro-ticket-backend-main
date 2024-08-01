@@ -1,4 +1,4 @@
-import { TicketModel } from "../../data";
+import { ProjectModel, TicketModel } from "../../data";
 import {
   CreateTicketDto,
   CustomError,
@@ -17,12 +17,15 @@ export class TicketServices {
     });
     if (ticketExist) throw CustomError.badRequest("Ticket already exists");
 
+    const projectExist = await ProjectModel.findById(createTicketDto.project);
+    if (!projectExist) throw CustomError.badRequest("Project dont exists");
+
     try {
       const ticket = new TicketModel({
         ...createTicketDto,
-        price: 10,
+        price: projectExist.raffleConfig.priceTicket,
         date: new Date(),
-        qr: Math.random().toString(),
+        qr: Math.random().toString(), //todo: generate qr
       });
 
       await ticket.save();

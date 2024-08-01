@@ -4,6 +4,10 @@ const raffleConfigSchema = new mongoose.Schema({
   img: {
     type: String,
   },
+  priceTicket: {
+    type: Number,
+    required: [true, "Price ticket is required"],
+  },
   totalTickets: {
     type: Number,
     required: [true, "Total tickets is required"],

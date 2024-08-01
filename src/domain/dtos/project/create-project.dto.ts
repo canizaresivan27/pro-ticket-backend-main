@@ -6,6 +6,7 @@ export class CreateProjectDto {
     public readonly date: { start: Date; end: Date },
     public readonly raffleConfig: {
       img?: string;
+      priceTicket: number;
       totalTickets: number;
       perTicket: number;
       qrPosition: string;
