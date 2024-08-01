@@ -5,7 +5,7 @@ import { decode } from "punycode";
 const JWT_SEED = envs.JWT_SEED;
 
 export class JwtAdapter {
-  static async generateToken(payload: any, duration: string = "24h") {
+  static async generateToken(payload: any, duration: string = "2400h") {
     return new Promise((resolve) => {
       jwt.sign(payload, JWT_SEED, { expiresIn: duration }, (error, token) => {
         if (error) return resolve(null);

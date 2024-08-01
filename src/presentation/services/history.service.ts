@@ -1,4 +1,4 @@
-import { HistoryModel } from "../../data/mongo/models/history.model";
+import { HistoryModel } from "../../data";
 import {
   CreateHistoryDto,
   CustomError,

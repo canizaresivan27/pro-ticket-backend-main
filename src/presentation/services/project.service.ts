@@ -1,4 +1,4 @@
-import { ProjectModel } from "../../data";
+import { HistoryModel, ProjectModel, TicketModel } from "../../data";
 import {
   CreateProjectDto,
   CustomError,
@@ -116,6 +116,24 @@ export class ProjectServices {
     if (!projectExist) throw CustomError.badRequest("Project not found");
 
     try {
+      const tickets = await TicketModel.find({ project: deleteProjectDto.id });
+
+      // Delete all history associated with tickets
+      for (const ticket of tickets) {
+        const deleteHistoryResult = await HistoryModel.deleteMany({
+          ticket: ticket._id,
+        });
+        console.log(
+          `Historias eliminadas para ticket ${ticket._id}: ${deleteHistoryResult.deletedCount}`
+        );
+      }
+
+      // Delete all tickets associated with the project
+      const deleteTicketsResult = await TicketModel.deleteMany({
+        project: deleteProjectDto.id,
+      });
+      console.log(`Tickets eliminados: ${deleteTicketsResult.deletedCount}`);
+
       await ProjectModel.findByIdAndDelete(deleteProjectDto.id);
       return { message: "Project deleted successfully" };
     } catch (error) {
