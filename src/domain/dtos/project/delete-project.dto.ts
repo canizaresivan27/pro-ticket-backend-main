@@ -1,7 +1,7 @@
 import { Validators } from "../../../config";
 
 export class DeleteProjectDto {
-  constructor(public readonly id: string) {}
+  private constructor(public readonly id: string) {}
 
   static create(object: { [key: string]: any }): [string?, DeleteProjectDto?] {
     const { id } = object;

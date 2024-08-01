@@ -1,5 +1,12 @@
 import { Request, Response } from "express";
-import { CustomError, PaginationDto, CreateTicketDto } from "../../domain";
+import {
+  CustomError,
+  PaginationDto,
+  CreateTicketDto,
+  UpdateTicketDto,
+  DeleteTicketDto,
+  GetTicketDto,
+} from "../../domain";
 import { TicketServices } from "../services/ticket.service";
 
 export class TicketController {
@@ -37,14 +44,32 @@ export class TicketController {
   };
 
   ticketById = async (req: Request, res: Response) => {
-    return res.json("Ticket by Id");
+    const [error, getTicketDto] = GetTicketDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.ticketServices
+      .ticketById(getTicketDto!)
+      .then((ticket) => res.status(201).json(ticket))
+      .catch((error) => this.handleError(error, res));
   };
 
   updateTicket = async (req: Request, res: Response) => {
-    return res.json("Update Ticket");
+    const [error, updateTicketDto] = UpdateTicketDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.ticketServices
+      .updateTicket(updateTicketDto!)
+      .then((ticket) => res.status(201).json(ticket))
+      .catch((error) => this.handleError(error, res));
   };
 
   deleteTicket = async (req: Request, res: Response) => {
-    return res.json("Delete Ticket");
+    const [error, deleteTicketDto] = DeleteTicketDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.ticketServices
+      .deleteTicket(deleteTicketDto!)
+      .then((ticket) => res.status(201).json(ticket))
+      .catch((error) => this.handleError(error, res));
   };
 }

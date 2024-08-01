@@ -1,5 +1,5 @@
 export class GetProjectByIdDto {
-  constructor(public readonly projectId: string) {}
+  private constructor(public readonly projectId: string) {}
 
   static create(object: { [key: string]: any }): [string?, GetProjectByIdDto?] {
     const { projectId } = object;

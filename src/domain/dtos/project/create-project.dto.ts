@@ -1,7 +1,7 @@
 import { Validators } from "../../../config";
 
 export class CreateProjectDto {
-  constructor(
+  private constructor(
     public readonly name: string,
     public readonly date: { start: Date; end: Date },
     public readonly raffleConfig: {

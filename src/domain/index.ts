@@ -9,6 +9,9 @@ export * from "./dtos/project/update-project.dto";
 export * from "./dtos/project/delete-project.dto";
 export * from "./dtos/common/pagination.dto";
 export * from "./dtos/tickets/create-ticket.dto";
+export * from "./dtos/tickets/update-ticket.dto";
+export * from "./dtos/tickets/delete-ticket.dto";
+export * from "./dtos/tickets/get-ticket.dto copy";
 
 // entities
 export * from "./entities/user.entity";

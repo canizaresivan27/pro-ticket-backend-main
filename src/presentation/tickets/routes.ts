@@ -9,10 +9,10 @@ export class TicketRoutes {
     const controller = new TicketController(ticketServices);
 
     router.get("/", controller.getTicket);
-    //router.get("/id", controller.ticketById);
+    router.get("/id", controller.ticketById);
     router.post("/", controller.createTicket);
-    //router.put("/", controller.updateTicket);
-    //router.delete("/", controller.deleteTicket);
+    router.put("/", controller.updateTicket);
+    router.delete("/", controller.deleteTicket);
 
     return router;
   }
