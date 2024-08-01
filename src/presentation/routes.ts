@@ -3,6 +3,7 @@ import { AuthRoutes } from "./auth/routes";
 import { ProjectRoutes } from "./project/routes";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
 import { TicketRoutes } from "./tickets/routes";
+import { HistoryRoutes } from "./history/routes";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -19,6 +20,11 @@ export class AppRoutes {
       "/api/tickets",
       [AuthMiddleware.validateJWT],
       TicketRoutes.routes
+    );
+    router.use(
+      "/api/history",
+      [AuthMiddleware.validateJWT],
+      HistoryRoutes.routes
     );
 
     return router;

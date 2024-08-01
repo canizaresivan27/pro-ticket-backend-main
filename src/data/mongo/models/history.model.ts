@@ -8,6 +8,10 @@ const historySchema = new mongoose.Schema({
     type: String,
     required: [true, "Date is required"],
   },
+  dolarAmount: {
+    type: Number,
+    required: [true, "Amount is required"],
+  },
   amount: {
     type: Number,
     required: [true, "Amount is required"],
@@ -30,10 +34,18 @@ const historySchema = new mongoose.Schema({
     ref: "Ticket",
     required: true,
   },
-  user: {
+  seller: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
+  },
+});
+
+historySchema.set("toJSON", {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret, options) {
+    delete ret._id;
   },
 });
 

@@ -12,6 +12,9 @@ export * from "./dtos/tickets/create-ticket.dto";
 export * from "./dtos/tickets/update-ticket.dto";
 export * from "./dtos/tickets/delete-ticket.dto";
 export * from "./dtos/tickets/get-ticket.dto copy";
+export * from "./dtos/history/create-history.dto";
+export * from "./dtos/history/update-history.dto";
+export * from "./dtos/history/byId-history.dto";
 
 // entities
 export * from "./entities/user.entity";
