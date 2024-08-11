@@ -56,6 +56,7 @@ export class ProjectServices {
         projects: projects.map((project) => ({
           id: project.id,
           name: project.name,
+          priceTicket: project.raffleConfig.priceTicket,
           totalTickets: project.raffleConfig.totalTickets,
           state: project.state,
           owner: project.owner,
