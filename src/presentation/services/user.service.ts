@@ -18,7 +18,7 @@ export class UserServices {
     const { page, limit } = paginationDto;
 
     try {
-      const [total, history] = await Promise.all([
+      const [total, users] = await Promise.all([
         UserModel.countDocuments(),
         UserModel.find()
           .skip((page - 1) * limit)
@@ -34,7 +34,7 @@ export class UserServices {
         prev:
           page - 1 > 0 ? `/api/projects?page=${page - 1}&limit=${limit}` : null,
 
-        history: history,
+        users: users,
       };
     } catch (error) {
       throw CustomError.internalServer(`Internal Server Error`);

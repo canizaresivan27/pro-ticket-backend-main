@@ -43,13 +43,34 @@ export class ProjectController {
       .catch((error) => this.handleError(error, res));
   };
 
-  projectById = async (req: Request, res: Response) => {
-    const [error, getProjectByIdDto] = GetProjectByIdDto.create(req.body);
+  getRelatedTickets = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const [error, paginationDto] = PaginationDto.create(+page, +limit);
+    if (error) return res.status(400).json({ error });
+
+    const projectId = req.params.id;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    this.projectServices
+      .getRelatedTickets(projectId, paginationDto!)
+      .then((relatedTickets) => res.status(200).json(relatedTickets))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  getProjectById = async (req: Request, res: Response) => {
+    const projectId = req.params.id;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    const [error, getProjectByIdDto] = GetProjectByIdDto.create({
+      id: projectId,
+    });
     if (error) return res.status(400).json({ error });
 
     this.projectServices
       .getProjectById(getProjectByIdDto!)
-      .then((project) => res.status(201).json(project))
+      .then((project) => res.status(200).json(project))
       .catch((error) => this.handleError(error, res));
   };
 

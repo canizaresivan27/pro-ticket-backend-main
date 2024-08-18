@@ -9,7 +9,8 @@ export class ProjectRoutes {
     const controller = new ProjectController(projectServices);
 
     router.get("/", controller.getProject);
-    router.get("/id", controller.projectById);
+    router.get("/:id", controller.getProjectById);
+    router.get("/:id/tickets", controller.getRelatedTickets);
     router.post("/", controller.createProject);
     router.put("/", controller.updateProject);
     router.delete("/", controller.deleteProject);

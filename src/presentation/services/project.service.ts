@@ -67,6 +67,39 @@ export class ProjectServices {
     }
   }
 
+  async getRelatedTickets(projectId: string, paginationDto: PaginationDto) {
+    const { page, limit } = paginationDto;
+
+    try {
+      const [total, tickets] = await Promise.all([
+        TicketModel.countDocuments({ project: projectId }),
+        TicketModel.find({ project: projectId })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("seller"),
+      ]);
+
+      return {
+        page: page,
+        limit: limit,
+        total: total,
+        next: `/api/projects/${projectId}/tickets?page=${
+          page + 1
+        }&limit=${limit}`,
+        prev:
+          page - 1 > 0
+            ? `/api/projects/${projectId}/tickets?page=${
+                page - 1
+              }&limit=${limit}`
+            : null,
+
+        tickets: tickets,
+      };
+    } catch (error) {
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
+
   async getProjectById(getProjectByIdDto: GetProjectByIdDto) {
     const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
     if (!projectExist) throw CustomError.badRequest("Project not exists");
