@@ -74,6 +74,22 @@ export class ProjectController {
       .catch((error) => this.handleError(error, res));
   };
 
+  getProjectStatus = async (req: Request, res: Response) => {
+    const projectId = req.params.id;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    const [error, getProjectByIdDto] = GetProjectByIdDto.create({
+      id: projectId,
+    });
+    if (error) return res.status(400).json({ error });
+
+    this.projectServices
+      .getProjectStatus(getProjectByIdDto!)
+      .then((status) => res.status(200).json(status))
+      .catch((error) => this.handleError(error, res));
+  };
+
   updateProject = async (req: Request, res: Response) => {
     const [error, updateProjectDto] = UpdateProjectDto.create(req.body);
     if (error) return res.status(400).json({ error });

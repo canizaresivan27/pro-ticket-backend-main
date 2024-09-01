@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
-import { CustomError, PaginationDto } from "../../domain";
+import {
+  CreateUserDto,
+  CustomError,
+  GetUserDto,
+  PaginationDto,
+} from "../../domain";
 import { UserServices } from "../services";
+import { get } from "http";
 
 export class UserController {
   // DI
@@ -16,8 +22,11 @@ export class UserController {
   };
 
   createUser = async (req: Request, res: Response) => {
+    const [error, createUserDto] = CreateUserDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
     this.userServices
-      .createUser()
+      .createUser(createUserDto!)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };
@@ -34,8 +43,14 @@ export class UserController {
   };
 
   userById = async (req: Request, res: Response) => {
+    const userId = req.params.id;
+    if (!userId) res.status(400).json({ error: "Ticket ID is required" });
+
+    const [error, getUserDto] = GetUserDto.create({ id: userId });
+    if (error) return res.status(400).json({ error });
+
     this.userServices
-      .userById()
+      .userById(getUserDto!)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };
@@ -48,8 +63,11 @@ export class UserController {
   };
 
   deleteUser = async (req: Request, res: Response) => {
+    const [error, getUserDto] = GetUserDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
     this.userServices
-      .deleteUser()
+      .deleteUser(getUserDto!)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };

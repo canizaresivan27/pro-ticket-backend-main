@@ -12,13 +12,19 @@ export class TicketServices {
   constructor() {}
 
   async createTicket(createTicketDto: CreateTicketDto) {
-    const ticketExist = await TicketModel.findOne({
-      number: createTicketDto.number,
-    });
-    if (ticketExist) throw CustomError.badRequest("Ticket already exists");
-
     const projectExist = await ProjectModel.findById(createTicketDto.project);
     if (!projectExist) throw CustomError.badRequest("Project dont exists");
+
+    const ticketExist = await TicketModel.findOne({
+      project: createTicketDto.project,
+      number: createTicketDto.number,
+    });
+
+    if (ticketExist) {
+      throw CustomError.badRequest(
+        "Ticket number already exists for this project"
+      );
+    }
 
     try {
       const ticket = new TicketModel({
@@ -37,19 +43,24 @@ export class TicketServices {
     }
   }
 
-  async getTickets(paginationDto: PaginationDto) {
+  async getTickets(getTicketDto: GetTicketDto, paginationDto: PaginationDto) {
     const { page, limit } = paginationDto;
 
     try {
+      const projectId = getTicketDto ? getTicketDto.id : null;
+
+      // Crear el filtro basado en el id si existe
+      const filter = projectId ? { project: projectId } : {};
+
       const [total, tickets] = await Promise.all([
-        TicketModel.countDocuments(),
-        TicketModel.find()
+        TicketModel.countDocuments(filter),
+        TicketModel.find(filter)
           .skip((page - 1) * limit)
           .limit(limit)
-          .populate("seller", "name email role"), // add data in relation database
+          .populate("seller", "name email role") // agrega datos en relación a la base de datos
+          .populate("project", "name state owner"), // agrega datos en relación a la base de datos
       ]);
 
-      //
       return {
         page: page,
         limit: limit,
@@ -57,7 +68,6 @@ export class TicketServices {
         next: `/api/tickets?page=${page + 1}&limit=${limit}`,
         prev:
           page - 1 > 0 ? `/api/tickets?page=${page - 1}&limit=${limit}` : null,
-
         tickets: tickets,
       };
     } catch (error) {

@@ -9,7 +9,7 @@ export class UserRoutes {
     const controller = new UserController(userServices);
 
     router.get("/", controller.getUser);
-    router.get("/id", controller.userById);
+    router.get("/:id", controller.userById);
     router.post("/", controller.createUser);
     router.put("/", controller.updateUser);
     router.delete("/", controller.deleteUser);

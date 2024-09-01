@@ -8,8 +8,8 @@ export class TicketRoutes {
     const ticketServices = new TicketServices();
     const controller = new TicketController(ticketServices);
 
-    router.get("/", controller.getTicket);
-    router.get("/id", controller.ticketById);
+    router.get("/list/:id", controller.getTicket);
+    router.get("/:id", controller.ticketById);
     router.post("/", controller.createTicket);
     router.put("/", controller.updateTicket);
     router.delete("/", controller.deleteTicket);

@@ -2,9 +2,9 @@ import mongoose, { Schema } from "mongoose";
 
 const ticketSchema = new mongoose.Schema({
   number: {
-    type: Number,
+    type: String,
     required: [true, "Number are required"],
-    unique: true,
+    //unique: true,
   },
   date: {
     type: String,
@@ -32,7 +32,15 @@ const ticketSchema = new mongoose.Schema({
   state: {
     type: String,
     default: "UNPAID",
-    enum: ["PAID", "UNPAID", "CANCELLED"],
+    enum: [
+      "PAID",
+      "UNPAID",
+      "CANCELLED",
+      "WINNER",
+      "LOSER",
+      "REFUNDED",
+      "EXPIRED",
+    ],
   },
   project: {
     type: Schema.Types.ObjectId,

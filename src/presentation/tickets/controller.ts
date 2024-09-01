@@ -37,14 +37,21 @@ export class TicketController {
     const [error, paginationDto] = PaginationDto.create(+page, +limit);
     if (error) return res.status(400).json({ error });
 
+    const projectId = req.params.id;
+    const [errorID, getTicketDto] = GetTicketDto.create({ id: projectId });
+    if (errorID) return res.status(400).json({ error });
+
     this.ticketServices
-      .getTickets(paginationDto!)
+      .getTickets(getTicketDto!, paginationDto!)
       .then((ticket) => res.status(201).json(ticket))
       .catch((error) => this.handleError(error, res));
   };
 
   ticketById = async (req: Request, res: Response) => {
-    const [error, getTicketDto] = GetTicketDto.create(req.body);
+    const ticketId = req.params.id;
+    if (!ticketId) res.status(400).json({ error: "Ticket ID is required" });
+
+    const [error, getTicketDto] = GetTicketDto.create({ id: ticketId });
     if (error) return res.status(400).json({ error });
 
     this.ticketServices

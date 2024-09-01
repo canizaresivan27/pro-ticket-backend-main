@@ -115,6 +115,60 @@ export class ProjectServices {
     }
   }
 
+  async getProjectStatus(getProjectByIdDto: GetProjectByIdDto) {
+    const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
+    if (!projectExist) throw CustomError.badRequest("Project not exists");
+
+    try {
+      const project = await ProjectModel.findById(getProjectByIdDto.id);
+      const totalTickets = project?.raffleConfig.totalTickets || 1;
+      const perTicket = project?.raffleConfig.perTicket || 1;
+
+      const _numberTickets = Math.floor(totalTickets / perTicket);
+      const projectStatusArray = [];
+
+      for (let i = 0; i < totalTickets; i += perTicket) {
+        let numberRange = "";
+
+        for (let j = 0; j < perTicket; j++) {
+          if (i + j < totalTickets) {
+            numberRange += (i + j + 1).toString();
+
+            if (j < perTicket - 1 && i + j + 1 < totalTickets) {
+              numberRange += "-";
+            }
+          }
+        }
+
+        // find ticekt matching the project and number
+        const existingTicket = await TicketModel.findOne({
+          project: getProjectByIdDto.id,
+          number: numberRange,
+        });
+
+        if (existingTicket) {
+          projectStatusArray.push({
+            number: numberRange,
+            status: existingTicket.state,
+            ticket: existingTicket.id,
+          });
+        } else {
+          projectStatusArray.push({
+            number: numberRange,
+            status: "AVAILABLE",
+            ticket: null,
+          });
+        }
+      }
+
+      //console.log(projectStatusArray);
+      return projectStatusArray;
+    } catch (error) {
+      console.log({ error });
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
+
   updateProject = async (updateProjectDto: UpdateProjectDto) => {
     const nameConflict = await ProjectModel.findOne({
       name: updateProjectDto.name,

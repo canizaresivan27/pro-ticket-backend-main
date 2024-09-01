@@ -36,14 +36,25 @@ export class HistoryController {
     const [error, paginationDto] = PaginationDto.create(+page, +limit);
     if (error) return res.status(400).json({ error });
 
+    const ticketId = req.params.id;
+    if (!ticketId)
+      return res.status(400).json({ error: "Ticket ID is required" });
+
+    const [errorID, getTicketDto] = ByIdHistoryDto.create({ id: ticketId });
+    if (errorID) return res.status(400).json({ error });
+
     this.historyServices
-      .getHistory(paginationDto!)
+      .getHistory(getTicketDto!, paginationDto!)
       .then((history) => res.status(201).json(history))
       .catch((error) => this.handleError(error, res));
   };
 
   getHistoryById = async (req: Request, res: Response) => {
-    const [error, byIdHistoryDto] = ByIdHistoryDto.create(req.body);
+    const historyId = req.params.id;
+    if (!historyId)
+      return res.status(400).json({ error: "History ID is required" });
+
+    const [error, byIdHistoryDto] = ByIdHistoryDto.create({ id: historyId });
     if (error) return res.status(400).json({ error });
 
     this.historyServices

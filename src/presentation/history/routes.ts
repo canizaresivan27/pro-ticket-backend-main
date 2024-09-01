@@ -8,8 +8,8 @@ export class HistoryRoutes {
     const historyServices = new HistoryServices();
     const controller = new HistoryController(historyServices);
 
-    router.get("/", controller.getHistory);
-    router.get("/id", controller.getHistoryById);
+    router.get("/list/:id", controller.getHistory);
+    router.get("/:id", controller.getHistoryById);
     router.post("/", controller.createHistory);
     router.put("/", controller.updateHistory);
     router.delete("/", controller.deleteHistory);

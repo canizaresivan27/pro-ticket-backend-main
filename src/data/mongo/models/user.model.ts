@@ -10,6 +10,9 @@ const userSchema = new mongoose.Schema({
     required: [true, "Email is required"],
     unique: true,
   },
+  phone: {
+    type: String,
+  },
   emailValidated: {
     type: Boolean,
     default: false,
@@ -30,6 +33,10 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: ["ACTIVE"],
     enum: ["ACTIVE", "SUSPENDED", "DISABLED"],
+  },
+  created: {
+    type: Date,
+    default: Date.now,
   },
 });
 

@@ -12,7 +12,6 @@ export class AppRoutes {
 
     // Definir las rutas
     router.use("/api/auth", AuthRoutes.routes);
-
     router.use("/api/users", [AuthMiddleware.validateJWT], UserRoutes.routes);
     router.use(
       "/api/projects",

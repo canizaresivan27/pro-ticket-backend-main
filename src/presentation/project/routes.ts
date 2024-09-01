@@ -10,6 +10,7 @@ export class ProjectRoutes {
 
     router.get("/", controller.getProject);
     router.get("/:id", controller.getProjectById);
+    router.get("/status/:id", controller.getProjectStatus);
     router.get("/:id/tickets", controller.getRelatedTickets);
     router.post("/", controller.createProject);
     router.put("/", controller.updateProject);
