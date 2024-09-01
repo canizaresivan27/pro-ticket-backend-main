@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  CreateResellerDto,
   CreateUserDto,
   CustomError,
   GetUserDto,
@@ -31,6 +32,16 @@ export class UserController {
       .catch((error) => this.handleError(error, res));
   };
 
+  createReseller = async (req: Request, res: Response) => {
+    const [error, createResellerDto] = CreateResellerDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.userServices
+      .createReseller(createResellerDto!)
+      .then((user) => res.status(201).json(user))
+      .catch((error) => this.handleError(error, res));
+  };
+
   getUser = async (req: Request, res: Response) => {
     const { page = 1, limit = 10 } = req.query;
     const [error, paginationDto] = PaginationDto.create(+page, +limit);
@@ -51,6 +62,23 @@ export class UserController {
 
     this.userServices
       .userById(getUserDto!)
+      .then((user) => res.status(201).json(user))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  getRelatedUsers = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const [error, paginationDto] = PaginationDto.create(+page, +limit);
+    if (error) return res.status(400).json({ error });
+
+    const userId = req.params.id;
+    if (!userId) res.status(400).json({ error: "Ticket ID is required" });
+
+    const [errorID, getUserDto] = GetUserDto.create({ id: userId });
+    if (errorID) return res.status(400).json({ error });
+
+    this.userServices
+      .getRelatedUsers(getUserDto!, paginationDto!)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };

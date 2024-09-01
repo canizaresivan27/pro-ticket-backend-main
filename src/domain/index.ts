@@ -17,6 +17,7 @@ export * from "./dtos/history/update-history.dto";
 export * from "./dtos/history/byId-history.dto";
 export * from "./dtos/users/getUser.dto";
 export * from "./dtos/users/create-user.dto";
+export * from "./dtos/users/create-reseller.dto";
 
 // entities
 export * from "./entities/user.entity";

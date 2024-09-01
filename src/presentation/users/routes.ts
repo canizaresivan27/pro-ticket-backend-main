@@ -10,7 +10,9 @@ export class UserRoutes {
 
     router.get("/", controller.getUser);
     router.get("/:id", controller.userById);
+    router.get("/related/:id", controller.getRelatedUsers);
     router.post("/", controller.createUser);
+    router.post("/reseller", controller.createReseller);
     router.put("/", controller.updateUser);
     router.delete("/", controller.deleteUser);
 

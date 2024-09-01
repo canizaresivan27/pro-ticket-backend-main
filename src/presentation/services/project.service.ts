@@ -100,6 +100,39 @@ export class ProjectServices {
     }
   }
 
+  async getRelatedProjects(projectId: string, paginationDto: PaginationDto) {
+    const { page, limit } = paginationDto;
+
+    try {
+      const [total, projects] = await Promise.all([
+        ProjectModel.countDocuments({ owner: projectId }),
+        ProjectModel.find({ owner: projectId })
+          .skip((page - 1) * limit)
+          .limit(limit),
+        //.populate("seller"),
+      ]);
+
+      return {
+        page: page,
+        limit: limit,
+        total: total,
+        next: `/api/projects/related/${projectId}?page=${
+          page + 1
+        }&limit=${limit}`,
+        prev:
+          page - 1 > 0
+            ? `/api/projects/related/${projectId}?page=${
+                page - 1
+              }&limit=${limit}`
+            : null,
+
+        projects,
+      };
+    } catch (error) {
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
+
   async getProjectById(getProjectByIdDto: GetProjectByIdDto) {
     const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
     if (!projectExist) throw CustomError.badRequest("Project not exists");
@@ -205,7 +238,6 @@ export class ProjectServices {
 
     try {
       const tickets = await TicketModel.find({ project: deleteProjectDto.id });
-
       // Delete all history associated with tickets
       for (const ticket of tickets) {
         const deleteHistoryResult = await HistoryModel.deleteMany({
@@ -215,7 +247,6 @@ export class ProjectServices {
           `Historias eliminadas para ticket ${ticket._id}: ${deleteHistoryResult.deletedCount}`
         );
       }
-
       // Delete all tickets associated with the project
       const deleteTicketsResult = await TicketModel.deleteMany({
         project: deleteProjectDto.id,

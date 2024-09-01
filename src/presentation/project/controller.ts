@@ -43,6 +43,21 @@ export class ProjectController {
       .catch((error) => this.handleError(error, res));
   };
 
+  getRelatedProjects = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const [error, paginationDto] = PaginationDto.create(+page, +limit);
+    if (error) return res.status(400).json({ error });
+
+    const projectId = req.params.id;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    this.projectServices
+      .getRelatedProjects(projectId, paginationDto!)
+      .then((relatedTickets) => res.status(200).json(relatedTickets))
+      .catch((error) => this.handleError(error, res));
+  };
+
   getRelatedTickets = async (req: Request, res: Response) => {
     const { page = 1, limit = 10 } = req.query;
     const [error, paginationDto] = PaginationDto.create(+page, +limit);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: ["ACTIVE"],
     enum: ["ACTIVE", "SUSPENDED", "DISABLED"],
+  },
+  creatorId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
   },
   created: {
     type: Date,
