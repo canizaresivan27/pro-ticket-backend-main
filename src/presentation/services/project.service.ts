@@ -1,3 +1,4 @@
+import { populate } from "dotenv";
 import { HistoryModel, ProjectModel, TicketModel } from "../../data";
 import {
   CreateProjectDto,
@@ -6,6 +7,7 @@ import {
   GetProjectByIdDto,
   PaginationDto,
   UpdateProjectDto,
+  UpdateProjectMembersDto,
   UserEntity,
 } from "../../domain";
 
@@ -56,6 +58,7 @@ export class ProjectServices {
         projects: projects.map((project) => ({
           id: project.id,
           name: project.name,
+          image: project.raffleConfig.img,
           priceTicket: project.raffleConfig.priceTicket,
           totalTickets: project.raffleConfig.totalTickets,
           state: project.state,
@@ -108,8 +111,8 @@ export class ProjectServices {
         ProjectModel.countDocuments({ owner: projectId }),
         ProjectModel.find({ owner: projectId })
           .skip((page - 1) * limit)
-          .limit(limit),
-        //.populate("seller"),
+          .limit(limit)
+          .populate("owner"),
       ]);
 
       return {
@@ -125,8 +128,60 @@ export class ProjectServices {
                 page - 1
               }&limit=${limit}`
             : null,
+        projects: projects.map((project) => ({
+          id: project.id,
+          name: project.name,
+          image: project.raffleConfig.img,
+          priceTicket: project.raffleConfig.priceTicket,
+          totalTickets: project.raffleConfig.totalTickets,
+          state: project.state,
+          owner: project.owner,
+        })),
+      };
+    } catch (error) {
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
 
-        projects,
+  // realted reseller projects
+  async getRelatedProjectsReseller(
+    resellerId: string,
+    paginationDto: PaginationDto
+  ) {
+    const { page, limit } = paginationDto;
+
+    try {
+      const [total, projects] = await Promise.all([
+        ProjectModel.countDocuments({ members: { $in: [resellerId] } }),
+        ProjectModel.find({ members: { $in: [resellerId] } })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("owner", "id name email"),
+      ]);
+
+      return {
+        page: page,
+        limit: limit,
+        total: total,
+        next: `/api/projects/related/reseller/${resellerId}?page=${
+          page + 1
+        }&limit=${limit}`,
+        prev:
+          page - 1 > 0
+            ? `/api/projects/related/reseller/${resellerId}?page=${
+                page - 1
+              }&limit=${limit}`
+            : null,
+        projects: projects.map((project) => ({
+          id: project.id,
+          name: project.name,
+          image: project.raffleConfig.img,
+          priceTicket: project.raffleConfig.priceTicket,
+          totalTickets: project.raffleConfig.totalTickets,
+          state: project.state,
+          owner: project.owner,
+          members: project.members.length,
+        })),
       };
     } catch (error) {
       throw CustomError.internalServer(`Internal Server Error`);
@@ -138,9 +193,9 @@ export class ProjectServices {
     if (!projectExist) throw CustomError.badRequest("Project not exists");
 
     try {
-      const project = await ProjectModel.findById(
-        getProjectByIdDto.id
-      ).populate("owner");
+      const project = await ProjectModel.findById(getProjectByIdDto.id)
+        .populate("owner")
+        .populate("members", "id name state");
       return project;
     } catch (error) {
       console.log(error);
@@ -157,7 +212,7 @@ export class ProjectServices {
       const totalTickets = project?.raffleConfig.totalTickets || 1;
       const perTicket = project?.raffleConfig.perTicket || 1;
 
-      const _numberTickets = Math.floor(totalTickets / perTicket);
+      const numberTickets = Math.floor(totalTickets / perTicket);
       const projectStatusArray = [];
 
       for (let i = 0; i < totalTickets; i += perTicket) {
@@ -194,8 +249,32 @@ export class ProjectServices {
         }
       }
 
+      let pending = projectStatusArray.filter(
+        (ticket) => ticket.status === "UNPAID"
+      ).length;
+
+      let reserved = projectStatusArray.filter(
+        (ticket) => ticket.status === "RESERVED"
+      ).length;
+
+      let sold = projectStatusArray.filter(
+        (ticket) => ticket.status === "PAID"
+      ).length;
+
+      let goal = (project?.raffleConfig.priceTicket || 0) * numberTickets;
+      let collected =
+        projectStatusArray.filter((ticket) => ticket.status === "PAID").length *
+        (project?.raffleConfig.priceTicket || 0);
+
       //console.log(projectStatusArray);
-      return projectStatusArray;
+      return {
+        sold,
+        reserved,
+        pending,
+        goal,
+        collected,
+        grid: projectStatusArray,
+      };
     } catch (error) {
       console.log({ error });
       throw CustomError.internalServer(`Internal Server Error`);
@@ -221,6 +300,27 @@ export class ProjectServices {
           raffleConfig: updateProjectDto.raffleConfig,
           owner: updateProjectDto.owner,
           state: updateProjectDto.state,
+        },
+        { new: true }
+      ).populate("owner");
+
+      return updatedProject;
+    } catch (error) {
+      console.log(error);
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  };
+
+  // update project members
+  updateProjectMembers = async (updateProjectDto: UpdateProjectMembersDto) => {
+    const projectExist = await ProjectModel.findById(updateProjectDto.id);
+    if (!projectExist) throw CustomError.badRequest("Project not found");
+
+    try {
+      const updatedProject = await ProjectModel.findByIdAndUpdate(
+        updateProjectDto.id,
+        {
+          members: updateProjectDto.members,
         },
         { new: true }
       ).populate("owner");

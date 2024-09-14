@@ -39,20 +39,33 @@ export class AuthServices {
 
   public async loginUser(loginUserDto: LoginUserDto) {
     const user = await UserModel.findOne({ email: loginUserDto.email });
-    if (!user)
+    if (!user) {
       throw CustomError.badRequest("Email or password are not correct");
+    }
 
-    const isMatching = encryptAdapter.compare(
+    // Verifica si el usuario está suspendido o deshabilitado
+    if (user.state.includes("SUSPENDED")) {
+      throw CustomError.badRequest("User account is suspended");
+    }
+    if (user.state.includes("DISABLED")) {
+      throw CustomError.badRequest("User account is disabled");
+    }
+
+    const isMatching = await encryptAdapter.compare(
       loginUserDto.password,
       user.password
     );
-    if (!isMatching) throw CustomError.badRequest("Password is not valid");
+    if (!isMatching) {
+      throw CustomError.badRequest("Password is not valid");
+    }
 
     try {
       const { password, ...userEntity } = UserEntity.fromObject(user);
 
       const token = await JwtAdapter.generateToken({ id: user.id });
-      if (!token) throw CustomError.internalServer("Error while creating JWT");
+      if (!token) {
+        throw CustomError.internalServer("Error while creating JWT");
+      }
 
       return { user: userEntity, token: token };
     } catch (error) {

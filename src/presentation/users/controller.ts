@@ -5,6 +5,7 @@ import {
   CustomError,
   GetUserDto,
   PaginationDto,
+  UpdateUserDto,
 } from "../../domain";
 import { UserServices } from "../services";
 import { get } from "http";
@@ -84,8 +85,11 @@ export class UserController {
   };
 
   updateUser = async (req: Request, res: Response) => {
+    const [error, updateUserDto] = UpdateUserDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
     this.userServices
-      .updateUser()
+      .updateUser(updateUserDto!)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };

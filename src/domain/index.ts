@@ -18,6 +18,8 @@ export * from "./dtos/history/byId-history.dto";
 export * from "./dtos/users/getUser.dto";
 export * from "./dtos/users/create-user.dto";
 export * from "./dtos/users/create-reseller.dto";
+export * from "./dtos/project/update-project-members.dto";
+export * from "./dtos/users/update-user.dto";
 
 // entities
 export * from "./entities/user.entity";

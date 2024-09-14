@@ -12,9 +12,11 @@ export class ProjectRoutes {
     router.get("/:id", controller.getProjectById);
     router.get("/status/:id", controller.getProjectStatus);
     router.get("/related/:id", controller.getRelatedProjects);
+    router.get("/related/reseller/:id", controller.getRelatedProjectsReseller);
     router.get("/:id/tickets", controller.getRelatedTickets);
     router.post("/", controller.createProject);
     router.put("/", controller.updateProject);
+    router.put("/members", controller.updateProjectMembers);
     router.delete("/", controller.deleteProject);
 
     return router;

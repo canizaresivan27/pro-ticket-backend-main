@@ -6,6 +6,7 @@ import {
   CustomError,
   GetUserDto,
   PaginationDto,
+  UpdateUserDto,
   UserEntity,
 } from "../../domain";
 
@@ -149,20 +150,41 @@ export class UserServices {
     }
   }
 
-  async updateUser() {
+  async updateUser(updateUserDto: UpdateUserDto) {
+    const userExist = await UserModel.findById(updateUserDto.id);
+    if (!userExist) throw CustomError.notFound("User not found");
+
     try {
-      return { message: "update user" };
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        updateUserDto.id,
+        {
+          name: updateUserDto.name,
+          phone: updateUserDto.phone,
+          img: updateUserDto.img,
+          state: updateUserDto.state,
+        },
+        { new: true }
+      );
+
+      if (!updatedUser) throw CustomError.internalServer("Error updating user");
+
+      return { message: "User updated successfully", user: updatedUser };
     } catch (error) {
       console.log(error);
       throw CustomError.internalServer(`Internal Server Error`);
     }
   }
-
   async deleteUser(getUserDto: GetUserDto) {
     const userExist = await UserModel.findById(getUserDto.id);
     if (!userExist) throw CustomError.notFound("User not found");
 
     try {
+      const resellers = await UserModel.deleteMany({
+        creatorId: getUserDto.id,
+        role: "RESELLER_ROLE",
+      });
+      console.log(`Usuarios reseller eliminados: ${resellers.deletedCount}`);
+
       const projects = await ProjectModel.find({ owner: getUserDto.id });
 
       for (const project of projects) {

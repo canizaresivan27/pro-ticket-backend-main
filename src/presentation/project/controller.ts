@@ -6,6 +6,7 @@ import {
   GetProjectByIdDto,
   PaginationDto,
   UpdateProjectDto,
+  UpdateProjectMembersDto,
 } from "../../domain";
 import { ProjectServices } from "../services";
 
@@ -54,6 +55,22 @@ export class ProjectController {
 
     this.projectServices
       .getRelatedProjects(projectId, paginationDto!)
+      .then((relatedTickets) => res.status(200).json(relatedTickets))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  // realted reseller projects
+  getRelatedProjectsReseller = async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    const [error, paginationDto] = PaginationDto.create(+page, +limit);
+    if (error) return res.status(400).json({ error });
+
+    const projectId = req.params.id;
+    if (!projectId)
+      return res.status(400).json({ error: "Project ID is required" });
+
+    this.projectServices
+      .getRelatedProjectsReseller(projectId, paginationDto!)
       .then((relatedTickets) => res.status(200).json(relatedTickets))
       .catch((error) => this.handleError(error, res));
   };
@@ -111,6 +128,17 @@ export class ProjectController {
 
     this.projectServices
       .updateProject(updateProjectDto!)
+      .then((project) => res.status(201).json(project))
+      .catch((error) => this.handleError(error, res));
+  };
+
+  // update project members
+  updateProjectMembers = async (req: Request, res: Response) => {
+    const [error, updateProjectDto] = UpdateProjectMembersDto.create(req.body);
+    if (error) return res.status(400).json({ error });
+
+    this.projectServices
+      .updateProjectMembers(updateProjectDto!)
       .then((project) => res.status(201).json(project))
       .catch((error) => this.handleError(error, res));
   };

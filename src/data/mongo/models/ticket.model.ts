@@ -31,14 +31,14 @@ const ticketSchema = new mongoose.Schema({
   ],
   state: {
     type: String,
-    default: "UNPAID",
+    default: "RESERVED",
     enum: [
       "PAID",
       "UNPAID",
+      "RESERVED",
       "CANCELLED",
       "WINNER",
       "LOSER",
-      "REFUNDED",
       "EXPIRED",
     ],
   },
