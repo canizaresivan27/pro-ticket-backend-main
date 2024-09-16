@@ -9,6 +9,8 @@ import {
   UpdateUserDto,
   UserEntity,
 } from "../../domain";
+import { Document, Types } from 'mongoose';
+
 
 export class UserServices {
   //DI
@@ -51,6 +53,7 @@ export class UserServices {
 
     let newUser = {
       ...createResellerDto,
+      img: "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
       role: ["RESELLER_ROLE"],
     };
 
@@ -174,9 +177,11 @@ export class UserServices {
       throw CustomError.internalServer(`Internal Server Error`);
     }
   }
+
   async deleteUser(getUserDto: GetUserDto) {
     const userExist = await UserModel.findById(getUserDto.id);
     if (!userExist) throw CustomError.notFound("User not found");
+
 
     try {
       const resellers = await UserModel.deleteMany({
@@ -224,4 +229,57 @@ export class UserServices {
       throw CustomError.internalServer(`Internal Server Error`);
     }
   }
+
+
+  async deleteReseller(getUserDto: GetUserDto) {
+    const userExist = await UserModel.findById(getUserDto.id);
+    if (!userExist) throw CustomError.notFound("User not found");
+    if (!userExist.role.includes("RESELLER_ROLE"))
+      throw CustomError.badRequest("User is not a reseller");
+  
+    try {
+      // Remove reseller ID from all associated projects
+      await ProjectModel.updateMany(
+        { members: getUserDto.id },
+        { $pull: { members: getUserDto.id } }
+      );
+  
+      // Find all tickets where the seller is the reseller
+      const relatedTickets = await TicketModel.find({ seller: getUserDto.id }).populate("project");
+      for (const ticket of relatedTickets) {
+        const projectOwner = (ticket.project as any)?.owner;
+        if (projectOwner) {
+          await TicketModel.findByIdAndUpdate(ticket._id, { seller: projectOwner });
+          console.log(`Ticket owner ${ticket._id} updated`);
+        } else {
+          throw CustomError.notFound(`Ticket or project owner not found for ticket ${ticket._id}`);
+        }
+      }
+
+      // Find all histories where the seller is the reseller
+      const relatedHistory = await HistoryModel.find({ seller: getUserDto.id }).populate("ticket")
+      for (const history of relatedHistory) {
+        const ticketOwner = (history.ticket as any)?.seller;
+        if (ticketOwner) {
+          await HistoryModel.findByIdAndUpdate(history._id, { seller : ticketOwner });
+          console.log(`History owner ${history._id} updated`);
+        }
+        else {
+          throw CustomError.notFound(  `History or project owner not found for history ${history._id}`);
+        }
+      }
+
+      // Delete the reseller user
+      await UserModel.findByIdAndDelete(getUserDto.id);
+  
+      return {
+        message: "Reseller deleted successfully",
+      };
+    } catch (error) {
+      console.log(error);
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
+  
+  
 }

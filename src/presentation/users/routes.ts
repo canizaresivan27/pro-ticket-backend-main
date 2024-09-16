@@ -15,6 +15,8 @@ export class UserRoutes {
     router.post("/reseller", controller.createReseller);
     router.put("/", controller.updateUser);
     router.delete("/", controller.deleteUser);
+    router.delete("/reseller", controller.deleteReseller);
+
 
     return router;
   }

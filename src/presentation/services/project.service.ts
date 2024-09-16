@@ -19,7 +19,7 @@ export class ProjectServices {
     const projectExist = await ProjectModel.findOne({
       name: createProjectDto.name,
     });
-    if (projectExist) throw CustomError.badRequest("Project already exists");
+    if (projectExist) throw CustomError.badRequest("La rifa ya existe");
 
     try {
       const project = new ProjectModel({

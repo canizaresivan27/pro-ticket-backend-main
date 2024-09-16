@@ -40,15 +40,14 @@ export class AuthServices {
   public async loginUser(loginUserDto: LoginUserDto) {
     const user = await UserModel.findOne({ email: loginUserDto.email });
     if (!user) {
-      throw CustomError.badRequest("Email or password are not correct");
+      throw CustomError.badRequest("El correo electrónico o la contraseña no son correctos");
     }
 
-    // Verifica si el usuario está suspendido o deshabilitado
     if (user.state.includes("SUSPENDED")) {
-      throw CustomError.badRequest("User account is suspended");
+      throw CustomError.badRequest("La cuenta de usuario está suspendida");
     }
     if (user.state.includes("DISABLED")) {
-      throw CustomError.badRequest("User account is disabled");
+      throw CustomError.badRequest("La cuenta de usuario está deshabilitada");
     }
 
     const isMatching = await encryptAdapter.compare(
@@ -56,17 +55,15 @@ export class AuthServices {
       user.password
     );
     if (!isMatching) {
-      throw CustomError.badRequest("Password is not valid");
+      throw CustomError.badRequest("La contraseña no es válida");
     }
 
     try {
       const { password, ...userEntity } = UserEntity.fromObject(user);
-
       const token = await JwtAdapter.generateToken({ id: user.id });
       if (!token) {
         throw CustomError.internalServer("Error while creating JWT");
       }
-
       return { user: userEntity, token: token };
     } catch (error) {
       throw CustomError.internalServer(`${error}`);
@@ -76,7 +73,7 @@ export class AuthServices {
   private sendEmailValidationLink = async (email: string) => {
     const token = await JwtAdapter.generateToken({ email });
     if (!token) throw CustomError.internalServer("Error getting token");
-
+    
     const link = `${envs.WEBSERVICE_URL}/auth/validate-email/${token}`;
     const html = `
       <h1>Validate your email</h1>
@@ -89,10 +86,8 @@ export class AuthServices {
       subject: "Validate your Email - ProTicket",
       htmlBody: html,
     };
-
     const isSent = await this.emailServices.sendEmail(options);
     if (!isSent) throw CustomError.internalServer("Error sending email");
-
     return true;
   };
 
