@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsnd --respawn --clear src/app.ts",
-    "build": "rm -rf ./dist && tsc",
+    "build": "tsc",
     "start": "npm run build && node dist/app.js"
   },
   "keywords": [],
@@ -34,5 +34,8 @@
     "nodemailer": "^6.9.14",
     "qrcode": "^1.5.3",
     "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=16.x"
   }
 }
