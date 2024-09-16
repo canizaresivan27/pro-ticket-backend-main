@@ -1,6 +1,8 @@
 import express, { Router } from "express";
 import path from "path";
 import cors from "cors";
+import { envs } from "../config";
+import { env } from "process";
 
 interface Options {
   port: number;
@@ -30,7 +32,7 @@ export class Server {
     // Config CORS
     this.app.use(
       cors({
-        origin: "http://localhost:5173",
+        origin: envs.ORIGIN,
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         credentials: true,
       })
