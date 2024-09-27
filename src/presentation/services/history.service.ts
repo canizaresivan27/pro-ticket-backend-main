@@ -38,6 +38,11 @@ export class HistoryServices {
       await ticket.save();
     }
 
+    if (updatedTotalPaid > 0 && updatedTotalPaid < ticket.price) {
+      ticket.state = "UNPAID";
+      await ticket.save();
+    }
+
     try {
       const history = new HistoryModel({
         ...createHistoryDto,
@@ -161,7 +166,15 @@ export class HistoryServices {
         0
       );
       // if the total amount paid is less than the ticket price, change the ticket state to 'UNPAID'
-      if (remainingTotalPaid < parseFloat(ticket.price.toString())) {
+      if (remainingTotalPaid === 0) {
+        ticket.state = "RESERVED";
+        await ticket.save();
+      }
+      // if the total amount paid is less than the ticket price, change the ticket state to 'UNPAID'
+      if (
+        remainingTotalPaid > 0 &&
+        remainingTotalPaid < parseFloat(ticket.price.toString())
+      ) {
         ticket.state = "UNPAID";
         await ticket.save();
       }

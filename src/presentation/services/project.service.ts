@@ -239,12 +239,14 @@ export class ProjectServices {
             number: numberRange,
             status: existingTicket.state,
             ticket: existingTicket.id,
+            ownerData: existingTicket.ownerData,
           });
         } else {
           projectStatusArray.push({
             number: numberRange,
             status: "AVAILABLE",
             ticket: null,
+            ownerData: null,
           });
         }
       }

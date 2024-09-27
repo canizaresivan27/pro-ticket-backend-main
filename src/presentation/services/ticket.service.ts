@@ -1,3 +1,4 @@
+import { envs } from "../../config";
 import { ProjectModel, TicketModel, HistoryModel } from "../../data";
 import {
   CreateTicketDto,
@@ -53,8 +54,8 @@ export class TicketServices {
       await ticket.save();
 
       const isSent = await this.messageService.sendWhatsapp({
-        to: "+584249189050",
-        body: `El ticket N:[${ticket.number}] fue apartado exitosamente`,
+        to: createTicketDto.ownerData.phone1,
+        body: `El ticket Nº[${ticket.number}] fue apartado exitosamente ✅ \nPuedes ver tu ticket en: ${envs.ORIGIN}/your-ticket/${ticket._id}`,
       });
       if (!isSent) throw CustomError.internalServer("Error sending email");
 
@@ -98,6 +99,22 @@ export class TicketServices {
   }
 
   async ticketById(getTicketDto: GetTicketDto) {
+    const ticketExist = await TicketModel.findById(getTicketDto.id);
+    if (!ticketExist) throw CustomError.badRequest("Ticket not exists");
+
+    try {
+      const ticket = await TicketModel.findById(getTicketDto.id).populate(
+        "seller project"
+      );
+
+      return ticket;
+    } catch (error) {
+      console.log(error);
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
+
+  async ticketByIdAllUsers(getTicketDto: GetTicketDto) {
     const ticketExist = await TicketModel.findById(getTicketDto.id);
     if (!ticketExist) throw CustomError.badRequest("Ticket not exists");
 
