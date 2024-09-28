@@ -5,3 +5,4 @@ export * from "./regular-exp";
 export * from "./adapters/bcrypt.adapter";
 export * from "./adapters/jwt.adapter";
 export * from "./validators";
+export * from "./adapters/whatsapp.adapter";

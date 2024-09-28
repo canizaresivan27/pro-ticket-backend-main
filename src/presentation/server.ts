@@ -3,6 +3,7 @@ import path from "path";
 import cors from "cors";
 import { envs } from "../config";
 import { env } from "process";
+import { whatsapp } from "../config";
 
 interface Options {
   port: number;
@@ -43,6 +44,7 @@ export class Server {
 
     //* Routes
     this.app.use(this.routes);
+    whatsapp.initialize();
 
     //* SPA /^\/(?!api).*/  <== Únicamente si no empieza con la palabra api
     this.app.get("*", (req, res) => {

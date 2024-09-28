@@ -19,6 +19,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.10",
     "@types/nodemailer": "^6.4.15",
+    "@types/qrcode-terminal": "^0.12.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.3"
   },
@@ -33,7 +34,9 @@
     "mongoose": "^8.5.1",
     "nodemailer": "^6.9.14",
     "qrcode": "^1.5.3",
+    "qrcode-terminal": "^0.12.0",
     "twilio": "^5.3.1",
+    "whatsapp-web.js": "^1.26.0",
     "ws": "^8.18.0"
   },
   "engines": {
