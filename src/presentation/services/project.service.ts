@@ -10,6 +10,7 @@ import {
   UpdateProjectMembersDto,
   UserEntity,
 } from "../../domain";
+import { getSocketAdapter } from "../../config";
 
 export class ProjectServices {
   //DI
@@ -269,6 +270,16 @@ export class ProjectServices {
         (project?.raffleConfig.priceTicket || 0);
 
       //console.log(projectStatusArray);
+      const socketAdapter = getSocketAdapter();
+      socketAdapter.getIO().emit("project-status", {
+        sold,
+        reserved,
+        pending,
+        goal,
+        collected,
+        grid: projectStatusArray,
+      });
+
       return {
         sold,
         reserved,

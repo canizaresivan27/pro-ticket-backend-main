@@ -1,9 +1,9 @@
 import express, { Router } from "express";
 import path from "path";
 import cors from "cors";
-import { envs } from "../config";
-import { env } from "process";
+import { envs, initializeSocketAdapter, SocketAdapter } from "../config";
 import { whatsapp } from "../config";
+import http from "http";
 
 interface Options {
   port: number;
@@ -17,6 +17,7 @@ export class Server {
   private readonly port: number;
   private readonly publicPath: string;
   private readonly routes: Router;
+  private socketAdapter?: SocketAdapter;
 
   constructor(options: Options) {
     const { port, routes, public_path = "public" } = options;
@@ -46,6 +47,11 @@ export class Server {
     this.app.use(this.routes);
     whatsapp.initialize();
 
+    // Create Http server
+    const httpServer = http.createServer(this.app);
+    // Init socket adapter
+    initializeSocketAdapter(httpServer);
+
     //* SPA /^\/(?!api).*/  <== Únicamente si no empieza con la palabra api
     this.app.get("*", (req, res) => {
       const indexPath = path.join(
@@ -54,7 +60,7 @@ export class Server {
       res.sendFile(indexPath);
     });
 
-    this.serverListener = this.app.listen(this.port, () => {
+    this.serverListener = httpServer.listen(this.port, () => {
       console.log(`Server running on port ${this.port}`);
     });
   }

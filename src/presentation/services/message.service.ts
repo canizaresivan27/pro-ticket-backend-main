@@ -1,8 +1,8 @@
 import twilio, { Twilio } from "twilio";
 import { whatsapp } from "../../config";
 
-interface WhatsappMessageParams {
-  to: string; // Número de WhatsApp del usuario (formato internacional, e.g., +584249189050)
+interface MessageParams {
+  to: string;
   body: string;
 }
 
@@ -13,14 +13,14 @@ export class MessageService {
     this.client = twilio(accountSid, authToken);
   }
 
-  async sendWhatsapp(params: WhatsappMessageParams): Promise<boolean> {
+  async sendWhatsapp(params: MessageParams): Promise<boolean> {
     const { to, body } = params;
 
     try {
       const message = await this.client.messages.create({
-        body: body, // Cuerpo del mensaje que se envía
-        from: "whatsapp:+14155238886", // Número de WhatsApp de Twilio
-        to: `whatsapp:${to}`, // Número de destino en formato internacional
+        body: body,
+        from: "whatsapp:+14155238886", // Twilio Number
+        to: `whatsapp:${to}`,
       });
 
       //console.log(`Message: ${to} ${body}`);
@@ -31,7 +31,7 @@ export class MessageService {
     }
   }
 
-  async sendWhatsappMessage(params: WhatsappMessageParams) {
+  async sendWhatsappMessage(params: MessageParams) {
     const { to, body } = params;
 
     try {

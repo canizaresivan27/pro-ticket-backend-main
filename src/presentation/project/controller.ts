@@ -9,6 +9,7 @@ import {
   UpdateProjectMembersDto,
 } from "../../domain";
 import { ProjectServices } from "../services";
+import { getSocketAdapter } from "../../config";
 
 export class ProjectController {
   // DI
@@ -118,7 +119,9 @@ export class ProjectController {
 
     this.projectServices
       .getProjectStatus(getProjectByIdDto!)
-      .then((status) => res.status(200).json(status))
+      .then((status) => {
+        res.status(200).json(status);
+      })
       .catch((error) => this.handleError(error, res));
   };
 
