@@ -1,15 +1,19 @@
 import { Client, LocalAuth } from "whatsapp-web.js";
-import qrcode from "qrcode-terminal";
 import { getSocketAdapter } from "./socket.adapter";
 
 export const whatsapp = new Client({
-  authStrategy: new LocalAuth(),
+  //authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
 });
 
 whatsapp.on("qr", (qr) => {
   const socketAdapter = getSocketAdapter();
   socketAdapter.getIO().emit("whatsapp-qr", { status: "linkup", qr: qr });
   //qrcode.generate(qr, { small: true });
+  return qr;
 });
 
 whatsapp.on("ready", () => {

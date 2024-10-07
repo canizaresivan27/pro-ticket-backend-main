@@ -18,16 +18,21 @@ export class SocketAdapter {
 
   private initializeSocketEvents() {
     this.io.on("connection", (socket) => {
-      console.log("New client connected:", socket.id);
+      console.log("[server] New client connected:", socket.id);
 
-      socket.on("disconnect", () => {
-        console.log("Client disconnected:", socket.id);
+      // EVENTS
+      //room
+      socket.on("joinProjectRoom", ({ projectId }) => {
+        if (projectId) {
+          socket.join(projectId);
+          console.log(
+            `[server] Socket[${socket.id}] se unió a la sala: ${projectId}`
+          );
+        }
       });
 
-      // events
-      socket.on("exampleEvent", (msg) => {
-        console.log("Message received:", msg);
-        this.io.emit("chat message", msg);
+      socket.on("disconnect", () => {
+        console.log("[server] Client disconnected:", socket.id);
       });
     });
   }

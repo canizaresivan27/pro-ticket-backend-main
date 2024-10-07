@@ -16,12 +16,6 @@ export class TicketServices {
 
   async sedMessage() {
     try {
-      //const isSent = await this.messageService.sendWhatsapp({
-      //  to: "+584249189050",
-      //  body: "Hello from WhatsApp",
-      //});
-      //if (!isSent) throw CustomError.internalServer("Error sending email");
-
       const tel = "+584249189050";
       const chatId = tel.substring(1) + "@c.us";
       const number_details = await whatsapp.getNumberId(chatId);
@@ -29,7 +23,6 @@ export class TicketServices {
       if (number_details) {
         const body = "Hello from WhatsApp aaa";
         await whatsapp.sendMessage(chatId, body);
-        //return { message: "Message sent" };
       } else {
         throw CustomError.badRequest("Number not found");
       }

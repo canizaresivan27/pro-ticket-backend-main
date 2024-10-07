@@ -1,4 +1,3 @@
-import { populate } from "dotenv";
 import { HistoryModel, ProjectModel, TicketModel } from "../../data";
 import {
   CreateProjectDto,
@@ -8,9 +7,7 @@ import {
   PaginationDto,
   UpdateProjectDto,
   UpdateProjectMembersDto,
-  UserEntity,
 } from "../../domain";
-import { getSocketAdapter } from "../../config";
 
 export class ProjectServices {
   //DI
@@ -33,6 +30,15 @@ export class ProjectServices {
     } catch (error) {
       console.log({ error });
       throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }
+
+  async getWhatsappStatus() {
+    try {
+      return { status: "connected", qr: "" };
+    } catch (error) {
+      console.error("Error getting WhatsApp state:", error);
+      throw new Error("Error getting WhatsApp state");
     }
   }
 
@@ -269,9 +275,9 @@ export class ProjectServices {
         projectStatusArray.filter((ticket) => ticket.status === "PAID").length *
         (project?.raffleConfig.priceTicket || 0);
 
-      //console.log(projectStatusArray);
+      /*
       const socketAdapter = getSocketAdapter();
-      socketAdapter.getIO().emit("project-status", {
+      socketAdapter.getIO().to(getProjectByIdDto.id).emit("project-status", {
         sold,
         reserved,
         pending,
@@ -279,6 +285,9 @@ export class ProjectServices {
         collected,
         grid: projectStatusArray,
       });
+      */
+
+      //console.log(projectStatusArray);
 
       return {
         sold,

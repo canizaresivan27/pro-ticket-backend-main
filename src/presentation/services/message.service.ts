@@ -1,4 +1,3 @@
-import twilio, { Twilio } from "twilio";
 import { whatsapp } from "../../config";
 
 interface MessageParams {
@@ -7,29 +6,7 @@ interface MessageParams {
 }
 
 export class MessageService {
-  private client: Twilio;
-
-  constructor(accountSid: string, authToken: string) {
-    this.client = twilio(accountSid, authToken);
-  }
-
-  async sendWhatsapp(params: MessageParams): Promise<boolean> {
-    const { to, body } = params;
-
-    try {
-      const message = await this.client.messages.create({
-        body: body,
-        from: "whatsapp:+14155238886", // Twilio Number
-        to: `whatsapp:${to}`,
-      });
-
-      //console.log(`Message: ${to} ${body}`);
-      return true;
-    } catch (error) {
-      console.error("Error sending message:", error);
-      return false;
-    }
-  }
+  constructor() {}
 
   async sendWhatsappMessage(params: MessageParams) {
     const { to, body } = params;
@@ -46,6 +23,28 @@ export class MessageService {
       }
       return { message: "Message sent" };
     } catch (error) {
+      throw new Error(`Internal Server Error`);
+    }
+  }
+
+  async getWhatsappStatus() {
+    try {
+      const state = await whatsapp.getState();
+      whatsapp.on("qr", (qr) => {
+        return { qr: qr, status: state };
+      });
+    } catch (error) {
+      console.error(error);
+      throw new Error(`Internal Server Error`);
+    }
+  }
+
+  async disconnectWhatsapp() {
+    try {
+      await whatsapp.destroy();
+      return { message: "Whatsapp disconnected" };
+    } catch (error) {
+      console.error(error);
       throw new Error(`Internal Server Error`);
     }
   }
