@@ -55,7 +55,7 @@ export class TicketServices {
         qr: Math.random().toString(), //todo: generate qr
       });
 
-      console.log({ ticket });
+      //console.log({ ticket });
 
       await ticket.save();
 

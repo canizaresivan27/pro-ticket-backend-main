@@ -210,6 +210,7 @@ export class ProjectServices {
     }
   }
 
+  /*
   async getProjectStatus(getProjectByIdDto: GetProjectByIdDto) {
     const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
     if (!projectExist) throw CustomError.badRequest("Project not exists");
@@ -275,19 +276,94 @@ export class ProjectServices {
         projectStatusArray.filter((ticket) => ticket.status === "PAID").length *
         (project?.raffleConfig.priceTicket || 0);
 
-      /*
-      const socketAdapter = getSocketAdapter();
-      socketAdapter.getIO().to(getProjectByIdDto.id).emit("project-status", {
+      //console.log(projectStatusArray);
+
+      return {
         sold,
         reserved,
         pending,
         goal,
         collected,
         grid: projectStatusArray,
-      });
-      */
+      };
+    } catch (error) {
+      console.log({ error });
+      throw CustomError.internalServer(`Internal Server Error`);
+    }
+  }*/
 
-      //console.log(projectStatusArray);
+  async getProjectStatus(getProjectByIdDto: GetProjectByIdDto) {
+    const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
+    if (!projectExist) throw CustomError.badRequest("Project not exists");
+
+    try {
+      const project = await ProjectModel.findById(getProjectByIdDto.id);
+      const totalTickets = project?.raffleConfig.totalTickets || 1;
+      const perTicket = project?.raffleConfig.perTicket || 1;
+
+      const numberTickets = Math.floor(totalTickets / perTicket);
+
+      // Obtener todos los tickets del proyecto en una sola consulta
+      const tickets = await TicketModel.find({
+        project: getProjectByIdDto.id,
+      }).lean();
+
+      // Crear un mapa para acceder rápidamente a los tickets por número
+      const ticketMap = new Map(
+        tickets.map((ticket) => [ticket.number, ticket])
+      );
+
+      const projectStatusArray = [];
+
+      for (let i = 0; i < totalTickets; i += perTicket) {
+        let numberRange = "";
+
+        for (let j = 0; j < perTicket; j++) {
+          if (i + j < totalTickets) {
+            numberRange += (i + j + 1).toString();
+
+            if (j < perTicket - 1 && i + j + 1 < totalTickets) {
+              numberRange += "-";
+            }
+          }
+        }
+
+        // Obtener el ticket correspondiente desde el mapa
+        const existingTicket = ticketMap.get(numberRange);
+
+        if (existingTicket) {
+          projectStatusArray.push({
+            number: numberRange,
+            status: existingTicket.state,
+            ticket: existingTicket._id,
+            ownerData: existingTicket.ownerData,
+          });
+        } else {
+          projectStatusArray.push({
+            number: numberRange,
+            status: "AVAILABLE",
+            ticket: null,
+            ownerData: null,
+          });
+        }
+      }
+
+      let pending = projectStatusArray.filter(
+        (ticket) => ticket.status === "UNPAID"
+      ).length;
+
+      let reserved = projectStatusArray.filter(
+        (ticket) => ticket.status === "RESERVED"
+      ).length;
+
+      let sold = projectStatusArray.filter(
+        (ticket) => ticket.status === "PAID"
+      ).length;
+
+      let goal = (project?.raffleConfig.priceTicket || 0) * numberTickets;
+      let collected =
+        projectStatusArray.filter((ticket) => ticket.status === "PAID").length *
+        (project?.raffleConfig.priceTicket || 0);
 
       return {
         sold,
