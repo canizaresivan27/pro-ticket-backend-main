@@ -9,6 +9,7 @@ export class UpdateProjectDto {
       img?: string;
       qrPosition: string;
       numberPosition: string;
+      orientation: string;
     },
     public readonly owner: string, // ID
     public readonly state: string = "ACTIVE" //public readonly owner: string

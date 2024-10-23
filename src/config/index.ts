@@ -7,3 +7,5 @@ export * from "./adapters/jwt.adapter";
 export * from "./validators";
 export * from "./adapters/whatsapp.adapter";
 export * from "./adapters/socket.adapter";
+export * from "./adapters/image.adapter";
+export * from "./adapters/cloudinary.adapter";

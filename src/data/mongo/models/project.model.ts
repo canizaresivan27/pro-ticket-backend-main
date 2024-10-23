@@ -27,6 +27,11 @@ const raffleConfigSchema = new mongoose.Schema({
     default: "bl",
     enum: ["br", "bl", "tr", "tl"],
   },
+  orientation: {
+    type: String,
+    default: "portrait",
+    enum: ["portrait", "landscape"],
+  },
 });
 
 // PROJECT MODEL

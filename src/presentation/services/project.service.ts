@@ -1,3 +1,4 @@
+import { CloudinaryAdapter } from "../../config";
 import { HistoryModel, ProjectModel, TicketModel } from "../../data";
 import {
   CreateProjectDto,
@@ -13,16 +14,36 @@ export class ProjectServices {
   //DI
   constructor() {}
 
-  async createProject(createProjectDto: CreateProjectDto) {
+  async createProject(createProjectDto: CreateProjectDto, file: any) {
+    let imgUrl = "";
+
     const projectExist = await ProjectModel.findOne({
       name: createProjectDto.name,
     });
     if (projectExist) throw CustomError.badRequest("La rifa ya existe");
 
     try {
+      if (file) {
+        const result = await CloudinaryAdapter.uploader.upload(file.path, {
+          folder: "projects",
+          /*
+          use_filename: true,
+          unique_filename: false,
+          overwrite: true,
+          */
+        });
+        imgUrl = result.secure_url;
+      }
+
       const project = new ProjectModel({
         ...createProjectDto,
+        raffleConfig: {
+          ...createProjectDto.raffleConfig,
+          img: imgUrl,
+        },
       });
+
+      console.log(imgUrl, "imageUrl");
 
       await project.save();
 
@@ -210,88 +231,6 @@ export class ProjectServices {
     }
   }
 
-  /*
-  async getProjectStatus(getProjectByIdDto: GetProjectByIdDto) {
-    const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
-    if (!projectExist) throw CustomError.badRequest("Project not exists");
-
-    try {
-      const project = await ProjectModel.findById(getProjectByIdDto.id);
-      const totalTickets = project?.raffleConfig.totalTickets || 1;
-      const perTicket = project?.raffleConfig.perTicket || 1;
-
-      const numberTickets = Math.floor(totalTickets / perTicket);
-      const projectStatusArray = [];
-
-      for (let i = 0; i < totalTickets; i += perTicket) {
-        let numberRange = "";
-
-        for (let j = 0; j < perTicket; j++) {
-          if (i + j < totalTickets) {
-            numberRange += (i + j + 1).toString();
-
-            if (j < perTicket - 1 && i + j + 1 < totalTickets) {
-              numberRange += "-";
-            }
-          }
-        }
-
-        // find ticekt matching the project and number
-        const existingTicket = await TicketModel.findOne({
-          project: getProjectByIdDto.id,
-          number: numberRange,
-        });
-
-        if (existingTicket) {
-          projectStatusArray.push({
-            number: numberRange,
-            status: existingTicket.state,
-            ticket: existingTicket.id,
-            ownerData: existingTicket.ownerData,
-          });
-        } else {
-          projectStatusArray.push({
-            number: numberRange,
-            status: "AVAILABLE",
-            ticket: null,
-            ownerData: null,
-          });
-        }
-      }
-
-      let pending = projectStatusArray.filter(
-        (ticket) => ticket.status === "UNPAID"
-      ).length;
-
-      let reserved = projectStatusArray.filter(
-        (ticket) => ticket.status === "RESERVED"
-      ).length;
-
-      let sold = projectStatusArray.filter(
-        (ticket) => ticket.status === "PAID"
-      ).length;
-
-      let goal = (project?.raffleConfig.priceTicket || 0) * numberTickets;
-      let collected =
-        projectStatusArray.filter((ticket) => ticket.status === "PAID").length *
-        (project?.raffleConfig.priceTicket || 0);
-
-      //console.log(projectStatusArray);
-
-      return {
-        sold,
-        reserved,
-        pending,
-        goal,
-        collected,
-        grid: projectStatusArray,
-      };
-    } catch (error) {
-      console.log({ error });
-      throw CustomError.internalServer(`Internal Server Error`);
-    }
-  }*/
-
   async getProjectStatus(getProjectByIdDto: GetProjectByIdDto) {
     const projectExist = await ProjectModel.findById(getProjectByIdDto.id);
     if (!projectExist) throw CustomError.badRequest("Project not exists");
@@ -379,7 +318,10 @@ export class ProjectServices {
     }
   }
 
-  updateProject = async (updateProjectDto: UpdateProjectDto) => {
+  updateProject = async (
+    updateProjectDto: UpdateProjectDto,
+    newImageFile?: any
+  ) => {
     const nameConflict = await ProjectModel.findOne({
       name: updateProjectDto.name,
       _id: { $ne: updateProjectDto.id }, // Exclude the current project
@@ -391,11 +333,41 @@ export class ProjectServices {
     if (!projectExist) throw CustomError.badRequest("Project not found");
 
     try {
+      // delete previous image from cloudinary
+      const existingImageUrl = projectExist.raffleConfig.img;
+      if (existingImageUrl && newImageFile) {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.\w+$/;
+        const match = existingImageUrl.match(regex);
+        const publicId = match ? match[1] : null;
+
+        if (publicId) {
+          await CloudinaryAdapter.uploader.destroy(publicId);
+          console.log(`Imagen anterior eliminada: ${publicId}`);
+        }
+      }
+
+      // upload new image to cloudinary
+      let newImageUrl = existingImageUrl;
+      if (newImageFile) {
+        const uploadResult = await CloudinaryAdapter.uploader.upload(
+          newImageFile.path,
+          {
+            folder: "projects",
+          }
+        );
+        newImageUrl = uploadResult.secure_url;
+        console.log(`Nueva imagen subida: ${newImageUrl}`);
+      }
+
       const updatedProject = await ProjectModel.findByIdAndUpdate(
         updateProjectDto.id,
         {
           name: updateProjectDto.name,
-          raffleConfig: updateProjectDto.raffleConfig,
+          date: updateProjectDto.date,
+          raffleConfig: {
+            ...updateProjectDto.raffleConfig,
+            img: newImageUrl,
+          },
           owner: updateProjectDto.owner,
           state: updateProjectDto.state,
         },
@@ -435,21 +407,35 @@ export class ProjectServices {
     if (!projectExist) throw CustomError.badRequest("Project not found");
 
     try {
+      // extract public_id from imageUrl & delete image from cloudinary
+      const imageUrl = projectExist.raffleConfig.img;
+      if (imageUrl) {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.\w+$/;
+        const match = imageUrl.match(regex);
+
+        const publicId = match ? match[1] : null;
+
+        if (publicId) {
+          const result = await CloudinaryAdapter.uploader.destroy(publicId);
+          //console.log(`Imagen eliminada de Cloudinary: ${result.result}`);
+        } else {
+          console.log("No se pudo obtener el public_id de la imagen.");
+        }
+      }
+
       const tickets = await TicketModel.find({ project: deleteProjectDto.id });
       // Delete all history associated with tickets
       for (const ticket of tickets) {
         const deleteHistoryResult = await HistoryModel.deleteMany({
           ticket: ticket._id,
         });
-        console.log(
-          `Historias eliminadas para ticket ${ticket._id}: ${deleteHistoryResult.deletedCount}`
-        );
+        //console.log(  `Historias eliminadas para ticket ${ticket._id}: ${deleteHistoryResult.deletedCount}`);
       }
       // Delete all tickets associated with the project
       const deleteTicketsResult = await TicketModel.deleteMany({
         project: deleteProjectDto.id,
       });
-      console.log(`Tickets eliminados: ${deleteTicketsResult.deletedCount}`);
+      //console.log(`Tickets eliminados: ${deleteTicketsResult.deletedCount}`);
 
       await ProjectModel.findByIdAndDelete(deleteProjectDto.id);
       return { message: "Project deleted successfully" };

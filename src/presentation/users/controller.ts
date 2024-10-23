@@ -24,21 +24,23 @@ export class UserController {
   };
 
   createUser = async (req: Request, res: Response) => {
-    const [error, createUserDto] = CreateUserDto.create(req.body);
+    const { image, ...projectData } = req.body;
+    const [error, createUserDto] = CreateUserDto.create(projectData);
     if (error) return res.status(400).json({ error });
 
     this.userServices
-      .createUser(createUserDto!)
+      .createUser(createUserDto!, req.file)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };
 
   createReseller = async (req: Request, res: Response) => {
-    const [error, createResellerDto] = CreateResellerDto.create(req.body);
+    const { image, ...projectData } = req.body;
+    const [error, createResellerDto] = CreateResellerDto.create(projectData);
     if (error) return res.status(400).json({ error });
 
     this.userServices
-      .createReseller(createResellerDto!)
+      .createReseller(createResellerDto!, req.file)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };
@@ -85,11 +87,12 @@ export class UserController {
   };
 
   updateUser = async (req: Request, res: Response) => {
-    const [error, updateUserDto] = UpdateUserDto.create(req.body);
+    const { image, ...projectData } = req.body;
+    const [error, updateUserDto] = UpdateUserDto.create(projectData);
     if (error) return res.status(400).json({ error });
 
     this.userServices
-      .updateUser(updateUserDto!)
+      .updateUser(updateUserDto!, req.file)
       .then((user) => res.status(201).json(user))
       .catch((error) => this.handleError(error, res));
   };

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ProjectController } from "./controller";
 import { ProjectServices } from "../services";
-import { getSocketAdapter } from "../../config";
+import { upload } from "../middlewares/multer.middleware";
 
 export class ProjectRoutes {
   static get routes(): Router {
@@ -18,8 +18,8 @@ export class ProjectRoutes {
     router.get("/related/:id", controller.getRelatedProjects);
     router.get("/related/reseller/:id", controller.getRelatedProjectsReseller);
     router.get("/:id/tickets", controller.getRelatedTickets);
-    router.post("/", controller.createProject);
-    router.put("/", controller.updateProject);
+    router.post("/", upload.single("image"), controller.createProject);
+    router.put("/", upload.single("image"), controller.updateProject);
     router.put("/members", controller.updateProjectMembers);
     router.delete("/", controller.deleteProject);
 

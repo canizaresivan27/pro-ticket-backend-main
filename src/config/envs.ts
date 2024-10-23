@@ -16,6 +16,11 @@ export const envs = {
   WEBSERVICE_URL: get("WEBSERVICE_URL").required().asString(),
   QR_SEED: get("QR_SEED").required().asString(),
   ORIGIN: get("ORIGIN").required().asString(),
+
   TWILIO_ACCOUNT_SID: get("TWILIO_ACCOUNT_SID").required().asString(),
   TWILIO_AUTH_TOKEN: get("TWILIO_AUTH_TOKEN").required().asString(),
+
+  CLOUDINARY_CLOUD_NAME: get("CLOUDINARY_CLOUD_NAME").required().asString(),
+  CLOUDINARY_API_KEY: get("CLOUDINARY_API_KEY").required().asString(),
+  CLOUDINARY_API_SECRET: get("CLOUDINARY_API_SECRET").required().asString(),
 };

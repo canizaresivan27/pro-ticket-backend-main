@@ -10,6 +10,7 @@ import {
 } from "../../domain";
 import { ProjectServices } from "../services";
 import { getSocketAdapter, whatsapp } from "../../config";
+import { Console } from "console";
 
 export class ProjectController {
   // DI
@@ -25,11 +26,12 @@ export class ProjectController {
   };
 
   createProject = async (req: Request, res: Response) => {
-    const [error, createProjectDto] = CreateProjectDto.create(req.body);
+    const { image, ...projectData } = req.body;
+    const [error, createProjectDto] = CreateProjectDto.create(projectData);
     if (error) return res.status(400).json({ error });
 
     this.projectServices
-      .createProject(createProjectDto!)
+      .createProject(createProjectDto!, req.file)
       .then((project) => res.status(201).json(project))
       .catch((error) => this.handleError(error, res));
   };
@@ -77,12 +79,10 @@ export class ProjectController {
             });
           });
         } else {
-          res
-            .status(400)
-            .json({
-              status: "not_connected",
-              message: "WhatsApp session is not connected",
-            });
+          res.status(400).json({
+            status: "not_connected",
+            message: "WhatsApp session is not connected",
+          });
         }
       })
       .catch((err) => {
@@ -186,11 +186,12 @@ export class ProjectController {
   };
 
   updateProject = async (req: Request, res: Response) => {
-    const [error, updateProjectDto] = UpdateProjectDto.create(req.body);
+    const { image, ...projectData } = req.body;
+    const [error, updateProjectDto] = UpdateProjectDto.create(projectData);
     if (error) return res.status(400).json({ error });
 
     this.projectServices
-      .updateProject(updateProjectDto!)
+      .updateProject(updateProjectDto!, req.file)
       .then((project) => res.status(201).json(project))
       .catch((error) => this.handleError(error, res));
   };

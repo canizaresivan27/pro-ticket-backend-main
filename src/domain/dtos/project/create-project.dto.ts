@@ -5,12 +5,13 @@ export class CreateProjectDto {
     public readonly name: string,
     public readonly date: { start: Date; end: Date },
     public readonly raffleConfig: {
-      img?: string;
+      img?: any;
       priceTicket: number;
       totalTickets: number;
       perTicket: number;
       qrPosition: string;
       numberPosition: string;
+      orientation: string;
     },
     public readonly owner: string, // ID
     public readonly state: string = "ACTIVE" //public readonly owner: string

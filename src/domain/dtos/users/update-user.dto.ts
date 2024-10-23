@@ -15,7 +15,7 @@ export class UpdateUserDto {
     if (!id) return ["Missing user id"];
     if (!Validators.isMongoID(id)) return ["Invalid User Id"];
     if (!name) return ["Missing name"];
-    if (!phone) return ["Missing email"];
+    if (!phone) return ["Missing phone"];
 
     return [undefined, new UpdateUserDto(id, name, phone, img, state)];
   }

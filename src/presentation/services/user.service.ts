@@ -1,4 +1,4 @@
-import { encryptAdapter, JwtAdapter } from "../../config";
+import { encryptAdapter, JwtAdapter, CloudinaryAdapter } from "../../config";
 import { HistoryModel, ProjectModel, TicketModel, UserModel } from "../../data";
 import {
   CreateResellerDto,
@@ -9,23 +9,31 @@ import {
   UpdateUserDto,
   UserEntity,
 } from "../../domain";
-import { Document, Types } from 'mongoose';
-
+import { Document, Types } from "mongoose";
 
 export class UserServices {
   //DI
   constructor() {}
 
-  async createUser(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto, file: any) {
+    let imgUrl = "";
     const existUser = await UserModel.findOne({ email: createUserDto.email });
     if (existUser) throw CustomError.badRequest("Email already exist");
 
-    let newUser = {
-      ...createUserDto,
-      role: ["USER_ROLE"],
-    };
-
     try {
+      if (file) {
+        const result = await CloudinaryAdapter.uploader.upload(file.path, {
+          folder: "users",
+        });
+        imgUrl = result.secure_url;
+      }
+
+      let newUser = {
+        ...createUserDto,
+        img: imgUrl,
+        role: ["USER_ROLE"],
+      };
+
       const user = new UserModel(newUser);
 
       // encrypt password
@@ -45,19 +53,30 @@ export class UserServices {
     }
   }
 
-  async createReseller(createResellerDto: CreateResellerDto) {
+  async createReseller(createResellerDto: CreateResellerDto, file: any) {
+    let imgUrl = "";
     const existUser = await UserModel.findOne({
       email: createResellerDto.email,
     });
     if (existUser) throw CustomError.badRequest("Email already exist");
 
-    let newUser = {
-      ...createResellerDto,
-      img: "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
-      role: ["RESELLER_ROLE"],
-    };
-
     try {
+      if (file) {
+        const result = await CloudinaryAdapter.uploader.upload(file.path, {
+          folder: "users",
+          use_filename: true,
+          unique_filename: false,
+          overwrite: true,
+        });
+        imgUrl = result.secure_url;
+      }
+
+      let newUser = {
+        ...createResellerDto,
+        img: imgUrl,
+        role: ["RESELLER_ROLE"],
+      };
+
       const user = new UserModel(newUser);
       // encrypt password
       user.password = encryptAdapter.hash(createResellerDto.password);
@@ -153,17 +172,43 @@ export class UserServices {
     }
   }
 
-  async updateUser(updateUserDto: UpdateUserDto) {
+  async updateUser(updateUserDto: UpdateUserDto, newImageFile?: any) {
     const userExist = await UserModel.findById(updateUserDto.id);
     if (!userExist) throw CustomError.notFound("User not found");
 
     try {
+      // delete previous image from cloudinary
+      const existingImageUrl = userExist.img;
+      if (existingImageUrl && newImageFile) {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.\w+$/;
+        const match = existingImageUrl.match(regex);
+        const publicId = match ? match[1] : null;
+
+        if (publicId) {
+          await CloudinaryAdapter.uploader.destroy(publicId);
+          console.log(`Imagen anterior eliminada: ${publicId}`);
+        }
+      }
+
+      // upload new image to cloudinary
+      let newImageUrl = existingImageUrl;
+      if (newImageFile) {
+        const uploadResult = await CloudinaryAdapter.uploader.upload(
+          newImageFile.path,
+          {
+            folder: "users",
+          }
+        );
+        newImageUrl = uploadResult.secure_url;
+        console.log(`Nueva imagen subida: ${newImageUrl}`);
+      }
+
       const updatedUser = await UserModel.findByIdAndUpdate(
         updateUserDto.id,
         {
           name: updateUserDto.name,
           phone: updateUserDto.phone,
-          img: updateUserDto.img,
+          img: newImageUrl,
           state: updateUserDto.state,
         },
         { new: true }
@@ -182,8 +227,23 @@ export class UserServices {
     const userExist = await UserModel.findById(getUserDto.id);
     if (!userExist) throw CustomError.notFound("User not found");
 
-
     try {
+      // extract public_id from imageUrl & delete image from cloudinary
+      const imageUrl = userExist.img;
+      if (imageUrl) {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.\w+$/;
+        const match = imageUrl.match(regex);
+
+        const publicId = match ? match[1] : null;
+
+        if (publicId) {
+          const result = await CloudinaryAdapter.uploader.destroy(publicId);
+          //console.log(`Imagen eliminada de Cloudinary: ${result.result}`);
+        } else {
+          console.log("No se pudo obtener el public_id de la imagen.");
+        }
+      }
+
       const resellers = await UserModel.deleteMany({
         creatorId: getUserDto.id,
         role: "RESELLER_ROLE",
@@ -230,48 +290,74 @@ export class UserServices {
     }
   }
 
-
   async deleteReseller(getUserDto: GetUserDto) {
     const userExist = await UserModel.findById(getUserDto.id);
     if (!userExist) throw CustomError.notFound("User not found");
     if (!userExist.role.includes("RESELLER_ROLE"))
       throw CustomError.badRequest("User is not a reseller");
-  
+
     try {
+      // extract public_id from imageUrl & delete image from cloudinary
+      const imageUrl = userExist.img;
+      if (imageUrl) {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.\w+$/;
+        const match = imageUrl.match(regex);
+
+        const publicId = match ? match[1] : null;
+
+        if (publicId) {
+          const result = await CloudinaryAdapter.uploader.destroy(publicId);
+          //console.log(`Imagen eliminada de Cloudinary: ${result.result}`);
+        } else {
+          console.log("No se pudo obtener el public_id de la imagen.");
+        }
+      }
+
       // Remove reseller ID from all associated projects
       await ProjectModel.updateMany(
         { members: getUserDto.id },
         { $pull: { members: getUserDto.id } }
       );
-  
+
       // Find all tickets where the seller is the reseller
-      const relatedTickets = await TicketModel.find({ seller: getUserDto.id }).populate("project");
+      const relatedTickets = await TicketModel.find({
+        seller: getUserDto.id,
+      }).populate("project");
       for (const ticket of relatedTickets) {
         const projectOwner = (ticket.project as any)?.owner;
         if (projectOwner) {
-          await TicketModel.findByIdAndUpdate(ticket._id, { seller: projectOwner });
+          await TicketModel.findByIdAndUpdate(ticket._id, {
+            seller: projectOwner,
+          });
           console.log(`Ticket owner ${ticket._id} updated`);
         } else {
-          throw CustomError.notFound(`Ticket or project owner not found for ticket ${ticket._id}`);
+          throw CustomError.notFound(
+            `Ticket or project owner not found for ticket ${ticket._id}`
+          );
         }
       }
 
       // Find all histories where the seller is the reseller
-      const relatedHistory = await HistoryModel.find({ seller: getUserDto.id }).populate("ticket")
+      const relatedHistory = await HistoryModel.find({
+        seller: getUserDto.id,
+      }).populate("ticket");
       for (const history of relatedHistory) {
         const ticketOwner = (history.ticket as any)?.seller;
         if (ticketOwner) {
-          await HistoryModel.findByIdAndUpdate(history._id, { seller : ticketOwner });
+          await HistoryModel.findByIdAndUpdate(history._id, {
+            seller: ticketOwner,
+          });
           console.log(`History owner ${history._id} updated`);
-        }
-        else {
-          throw CustomError.notFound(  `History or project owner not found for history ${history._id}`);
+        } else {
+          throw CustomError.notFound(
+            `History or project owner not found for history ${history._id}`
+          );
         }
       }
 
       // Delete the reseller user
       await UserModel.findByIdAndDelete(getUserDto.id);
-  
+
       return {
         message: "Reseller deleted successfully",
       };
@@ -280,6 +366,4 @@ export class UserServices {
       throw CustomError.internalServer(`Internal Server Error`);
     }
   }
-  
-  
 }
