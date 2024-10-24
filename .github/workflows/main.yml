@@ -1,22 +1,28 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}  # Definido desde los secretos
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
 
-    - name: Deploy code via SSH
-      run: |
-        ssh -i ~/.ssh/id_rsa <usuario>@$SSH_HOST "cd <ruta/del/proyecto> && git checkout <rama> && git pull && exit"
-      env:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 92.118.56.248 >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh root@92.118.56.248 'cd /home/administrator/proticket && docker-compose up -d'
