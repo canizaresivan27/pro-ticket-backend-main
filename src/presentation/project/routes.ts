@@ -9,9 +9,6 @@ export class ProjectRoutes {
     const projectServices = new ProjectServices();
     const controller = new ProjectController(projectServices);
 
-    router.get("/ws", controller.getWhatsappStatus);
-    router.post("/disconnet-ws", controller.disconnectWhatsappSession);
-
     router.get("/", controller.getProject);
     router.get("/:id", controller.getProjectById);
     router.get("/status/:id", controller.getProjectStatus);

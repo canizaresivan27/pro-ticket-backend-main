@@ -54,15 +54,6 @@ export class ProjectServices {
     }
   }
 
-  async getWhatsappStatus() {
-    try {
-      return { status: "connected", qr: "" };
-    } catch (error) {
-      console.error("Error getting WhatsApp state:", error);
-      throw new Error("Error getting WhatsApp state");
-    }
-  }
-
   async getProjects(paginationDto: PaginationDto) {
     const { page, limit } = paginationDto;
 

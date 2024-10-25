@@ -30,6 +30,11 @@ export class AppRoutes {
       [AuthMiddleware.validateJWT],
       HistoryRoutes.routes
     );
+    router.use(
+      "/api/notificacions",
+      [AuthMiddleware.validateJWT],
+      HistoryRoutes.routes
+    );
 
     return router;
   }

@@ -1,8 +1,12 @@
 import express, { Router } from "express";
 import path from "path";
 import cors from "cors";
-import { envs, initializeSocketAdapter, SocketAdapter } from "../config";
-import { whatsapp } from "../config";
+import {
+  envs,
+  initializeSocketAdapter,
+  initWhatsApp,
+  SocketAdapter,
+} from "../config";
 import http from "http";
 
 interface Options {
@@ -35,7 +39,7 @@ export class Server {
     // Config CORS
     this.app.use(
       cors({
-        origin: envs.ORIGIN,
+        origin: [envs.ORIGIN, "http://localhost:5173", "http://localhost:80"],
         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         credentials: true,
       })
@@ -46,12 +50,13 @@ export class Server {
 
     //* Routes
     this.app.use(this.routes);
-    whatsapp.initialize();
 
     // Create Http server
     const httpServer = http.createServer(this.app);
     // Init socket adapter
     initializeSocketAdapter(httpServer);
+
+    initWhatsApp();
 
     //* SPA /^\/(?!api).*/  <== Únicamente si no empieza con la palabra api
     this.app.get("*", (req, res) => {

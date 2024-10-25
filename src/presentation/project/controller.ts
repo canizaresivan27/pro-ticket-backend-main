@@ -9,8 +9,6 @@ import {
   UpdateProjectMembersDto,
 } from "../../domain";
 import { ProjectServices } from "../services";
-import { getSocketAdapter, whatsapp } from "../../config";
-import { Console } from "console";
 
 export class ProjectController {
   // DI
@@ -34,64 +32,6 @@ export class ProjectController {
       .createProject(createProjectDto!, req.file)
       .then((project) => res.status(201).json(project))
       .catch((error) => this.handleError(error, res));
-  };
-
-  getWhatsappStatus = async (req: Request, res: Response) => {
-    const socketAdapter = getSocketAdapter();
-
-    whatsapp
-      .getState()
-      .then((state) => {
-        if (state === "CONNECTED") {
-          res.json({ status: "connected", qr: "" });
-        } else {
-          // Si no está conectado, escucha el evento de QR
-          whatsapp.on("qr", (qr) => {
-            socketAdapter
-              .getIO()
-              .emit("whatsapp-qr", { status: "linkup", qr: qr });
-            res.json({ status: "linkup", qr: qr });
-          });
-        }
-      })
-      .catch((err) => {
-        console.error("Error getting WhatsApp state:", err);
-        res.status(500).json({ error: "Error getting WhatsApp state" });
-      });
-  };
-
-  disconnectWhatsappSession = async (req: Request, res: Response) => {
-    const socketAdapter = getSocketAdapter();
-
-    whatsapp
-      .getState()
-      .then((state) => {
-        if (state === "CONNECTED") {
-          // Desconectar la sesión
-          whatsapp.logout().then(() => {
-            socketAdapter
-              .getIO()
-              .emit("whatsapp-qr", { status: "disconnected", qr: "" });
-
-            res.json({
-              status: "disconnected",
-              message: "WhatsApp session disconnected successfully",
-            });
-          });
-        } else {
-          res.status(400).json({
-            status: "not_connected",
-            message: "WhatsApp session is not connected",
-          });
-        }
-      })
-      .catch((err) => {
-        console.error(
-          "Error getting WhatsApp state or disconnecting session:",
-          err
-        );
-        res.status(500).json({ error: "Error disconnecting WhatsApp session" });
-      });
   };
 
   getProject = async (req: Request, res: Response) => {

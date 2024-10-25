@@ -8,7 +8,7 @@ export class SocketAdapter {
   constructor(httpServer: http.Server) {
     this.io = new Server(httpServer, {
       cors: {
-        origin: envs.ORIGIN,
+        origin: [envs.ORIGIN, "http://localhost:5173", "http://localhost:80"],
         methods: ["GET", "POST"],
         credentials: true,
       },

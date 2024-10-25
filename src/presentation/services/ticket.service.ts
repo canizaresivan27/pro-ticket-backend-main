@@ -8,29 +8,10 @@ import {
   DeleteTicketDto,
   GetTicketDto,
 } from "../../domain";
-import { MessageService } from "./message.service";
-import { whatsapp } from "../../config";
+import { getWhatsAppClient } from "../../config";
 
 export class TicketServices {
-  constructor(private readonly messageService: MessageService) {}
-
-  async sedMessage() {
-    try {
-      const tel = "+584249189050";
-      const chatId = tel.substring(1) + "@c.us";
-      const number_details = await whatsapp.getNumberId(chatId);
-
-      if (number_details) {
-        const body = "Hello from WhatsApp aaa";
-        await whatsapp.sendMessage(chatId, body);
-      } else {
-        throw CustomError.badRequest("Number not found");
-      }
-      return { message: "Message sent" };
-    } catch (error) {
-      throw CustomError.internalServer(`Internal Server Error`);
-    }
-  }
+  constructor() {}
 
   async createTicket(createTicketDto: CreateTicketDto) {
     const projectExist = await ProjectModel.findById(createTicketDto.project);
@@ -52,19 +33,18 @@ export class TicketServices {
         ...createTicketDto,
         price: projectExist.raffleConfig.priceTicket,
         date: new Date(),
-        qr: Math.random().toString(), //todo: generate qr
+        qr: Math.random().toString(),
       });
-
-      //console.log({ ticket });
 
       await ticket.save();
 
+      /*
       const isSent = await this.messageService.sendWhatsappMessage({
         to: createTicketDto.ownerData.phone1,
         body: `El ticket Nº[${ticket.number}] fue apartado exitosamente ✅ \nPuedes ver tu ticket en: ${envs.ORIGIN}/your-ticket/${ticket._id}`,
       });
       if (!isSent) throw CustomError.internalServer("Error sending email");
-
+      */
       return ticket;
     } catch (error) {
       console.log({ error });
