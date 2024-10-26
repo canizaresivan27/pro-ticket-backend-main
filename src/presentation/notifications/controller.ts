@@ -16,24 +16,22 @@ export class NotificationController {
   };
 
   getStatusConnection = async (req: Request, res: Response) => {
-    const { image, ...projectData } = req.body;
     //const [error, createProjectDto] = CreateProjectDto.create(projectData);
     //if (error) return res.status(400).json({ error });
 
     this.notificationServices
       .getStatus()
-      .then((project) => res.status(201).json(project))
+      .then((data) => res.status(201).json(data))
       .catch((error) => this.handleError(error, res));
   };
 
   disconnectSession = async (req: Request, res: Response) => {
-    const { image, ...projectData } = req.body;
     //const [error, createProjectDto] = CreateProjectDto.create(projectData);
     //if (error) return res.status(400).json({ error });
 
     this.notificationServices
       .disconnectSession()
-      .then((project) => res.status(201).json(project))
+      .then((data) => res.status(201).json(data))
       .catch((error) => this.handleError(error, res));
   };
 }

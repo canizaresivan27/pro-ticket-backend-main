@@ -6,6 +6,7 @@ import { TicketRoutes } from "./tickets/routes";
 import { HistoryRoutes } from "./history/routes";
 import { UserRoutes } from "./users/routes";
 import { PublicRoutes } from "./public/routes";
+import { NotificationRoutes } from "./notifications/routes";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -33,7 +34,7 @@ export class AppRoutes {
     router.use(
       "/api/notificacions",
       [AuthMiddleware.validateJWT],
-      HistoryRoutes.routes
+      NotificationRoutes.routes
     );
 
     return router;

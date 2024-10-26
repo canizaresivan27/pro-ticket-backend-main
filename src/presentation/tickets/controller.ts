@@ -22,13 +22,6 @@ export class TicketController {
     return res.status(500).json({ error: "Internal server error" });
   };
 
-  sendMessage = async (req: Request, res: Response) => {
-    this.ticketServices
-      .sedMessage()
-      .then((ticket) => res.status(201).json(ticket))
-      .catch((error) => this.handleError(error, res));
-  };
-
   createTicket = async (req: Request, res: Response) => {
     const [error, createTicketDto] = CreateTicketDto.create(req.body);
     if (error) return res.status(400).json({ error });

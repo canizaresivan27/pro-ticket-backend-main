@@ -1,32 +1,70 @@
-import { getWhatsAppClient } from "../../config";
+import { getSocketAdapter, getWhatsAppClient } from "../../config";
 import { CustomError } from "../../domain";
-
-interface MessageParams {
-  to: string;
-  body: string;
-}
 
 export class NotificationServices {
   constructor() {}
 
   async getStatus() {
     try {
-      return { status: "" };
+      const whatsapp = getWhatsAppClient();
+      if (!whatsapp) {
+        throw CustomError.internalServer("WhatsApp client is not initialized.");
+      }
+
+      const state = await whatsapp.getState();
+      let qrCode: string | null = null;
+
+      if (state !== "CONNECTED") {
+        qrCode = await new Promise<string | null>((resolve, reject) => {
+          const timeout = setTimeout(() => resolve(null), 10000);
+
+          const handleQR = (qr: string) => {
+            clearTimeout(timeout);
+            resolve(qr);
+          };
+
+          const handleAuthFailure = () => {
+            clearTimeout(timeout);
+            reject(
+              new Error(
+                "Authentication failure. QR code could not be generated."
+              )
+            );
+          };
+
+          whatsapp.once("qr", handleQR);
+          whatsapp.once("auth_failure", handleAuthFailure);
+        });
+      }
+
+      return { status: state, qrCode };
     } catch (error) {
-      console.error(error);
-      throw new Error(`Internal Server Error`);
+      console.error("Error fetching status:", error);
+      throw new Error("Internal Server Error");
     }
   }
 
   async disconnectSession() {
     try {
-      return { message: "Whatsapp disconnected" };
+      const whatsapp = getWhatsAppClient();
+      if (!whatsapp) {
+        throw CustomError.internalServer("WhatsApp client is not initialized.");
+      }
+
+      const state = await whatsapp.getState();
+      if (state !== "CONNECTED") {
+        return {
+          message: "WhatsApp is not connected, so no logout was necessary.",
+        };
+      }
+
+      await whatsapp.logout();
+      return { message: "WhatsApp disconnected successfully" };
     } catch (error) {
-      console.error(error);
-      throw new Error(`Internal Server Error`);
+      console.error("Error during WhatsApp logout:", error);
+      throw new Error("Internal Server Error");
     }
   }
-
   /*
   async sendWhatsappMessage(params: MessageParams) {
     const { to, body } = params;

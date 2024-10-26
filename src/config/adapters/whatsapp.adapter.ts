@@ -9,6 +9,13 @@ const initializeWhatsApp = () => {
   console.log("Initializing WhatsApp client...");
 
   try {
+    // Destruir la instancia anterior si existe
+    if (whatsapp) {
+      whatsapp
+        .destroy()
+        .catch((err) => console.error("Error destroying instance:", err));
+    }
+
     whatsapp = new Client({
       puppeteer: {
         headless: true,
@@ -19,7 +26,7 @@ const initializeWhatsApp = () => {
     whatsapp.on("qr", (qr) => {
       console.log("QR code received for WhatsApp.");
       const socketAdapter = getSocketAdapter();
-      socketAdapter.getIO().emit("whatsapp-qr", { status: "linkup", qr: qr });
+      socketAdapter.getIO().emit("whatsapp-qr", { status: "linkup", qr });
     });
 
     whatsapp.on("ready", () => {
@@ -34,11 +41,9 @@ const initializeWhatsApp = () => {
           const state = await whatsapp?.getState();
           const phone = "+584249189050";
           const chatId = phone.substring(1) + "@c.us";
-          const body = `${state === "CONNECTED" ? "conectado ✅" : "Error❗"}`;
-          socketAdapter
-            .getIO()
-            .emit("whatsapp-qr", { status: "connected", qr: "" });
+          const body = state === "CONNECTED" ? "Conectado ✅" : "Error ❗";
 
+          socketAdapter.getIO().emit("whatsapp-status", { status: state });
           await whatsapp?.sendMessage(chatId, body);
         } catch (error) {
           console.error(
@@ -46,19 +51,38 @@ const initializeWhatsApp = () => {
             error
           );
         }
-      }, 1000 * 60 * 5); // 5 minutos
+      }, 1000 * 60 * 5); // Cada 5 minutos
     });
 
-    whatsapp.on("disconnected", (reason) => {
+    // Evento cuando se desconecta
+    whatsapp.on("disconnected", async (reason) => {
       console.log("WhatsApp client was logged out:", reason);
+
       const socketAdapter = getSocketAdapter();
       socketAdapter
         .getIO()
         .emit("whatsapp-qr", { status: "disconnected", qr: "" });
 
-      reconnect();
+      // Destruir la instancia de WhatsApp
+      if (whatsapp) {
+        try {
+          await whatsapp.destroy();
+          console.log(
+            "WhatsApp instance destroyed successfully after disconnect."
+          );
+        } catch (err) {
+          console.error(
+            "Error while destroying WhatsApp instance on disconnect:",
+            err
+          );
+        }
+        whatsapp = null;
+      }
+
+      reconnect(); // Intentar reconectar después de destruir la instancia
     });
 
+    // Inicializar el cliente
     whatsapp
       .initialize()
       .then(() => {
@@ -70,33 +94,23 @@ const initializeWhatsApp = () => {
       });
   } catch (error) {
     console.error("Error during WhatsApp initialization:", error);
+    reconnect();
   }
 };
 
 const reconnect = () => {
   const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 60000); // Máximo 1 minuto de espera
-  console.log(`Attempting to reconnect... (attempt ${reconnectAttempts + 1})`);
+  reconnectAttempts++;
 
-  setTimeout(async () => {
-    try {
-      reconnectAttempts += 1;
+  if (reconnectAttempts > maxReconnectAttempts) {
+    console.error("Max reconnection attempts reached. Stopping retries.");
+    return;
+  }
 
-      if (whatsapp) {
-        console.log("Destroying existing WhatsApp instance...");
-        await whatsapp.destroy();
-      }
+  console.log(`Attempting to reconnect... (attempt ${reconnectAttempts})`);
 
-      console.log("Reinitializing WhatsApp...");
-      initializeWhatsApp();
-      reconnectAttempts = 0; // Reset attempts on success
-    } catch (error) {
-      console.error("Reconnection failed:", error);
-      if (reconnectAttempts < maxReconnectAttempts) {
-        reconnect();
-      } else {
-        console.error("Max reconnection attempts reached. Stopping retries.");
-      }
-    }
+  setTimeout(() => {
+    initializeWhatsApp();
   }, delay);
 };
 
