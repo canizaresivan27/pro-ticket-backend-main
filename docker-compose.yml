@@ -11,3 +11,20 @@ services:
       - ./mongo:/data/db
     ports:
       - 27017:27017
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5173:3000"
+    depends_on:
+      - mongo-db
+    environment:
+      MONGO_DB_HOST: mongo-db
+      MONGO_DB_PORT: 27017
+      MONGO_DB_USER: mongo-user
+      MONGO_DB_PASS: 123456
+    volumes:
+      - .:/app
