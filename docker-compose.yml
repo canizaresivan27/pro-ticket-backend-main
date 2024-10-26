@@ -13,9 +13,7 @@ services:
       - 27017:27017
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/canizaresivan27/pro-ticket-backend-main:latest
     restart: always
     ports:
       - "5174:3000"
