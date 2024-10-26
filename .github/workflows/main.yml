@@ -1,28 +1,35 @@
-name: Deploy
+name: Deploy to VPS
 
 on:
   push:
     branches:
-      - main
+      - main  # Puedes cambiar esta rama según sea necesario
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add server to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H 92.118.56.248 >> ~/.ssh/known_hosts
+    - name: Add SSH key to known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan 92.118.56.248 >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
-        run: |
-          ssh root@92.118.56.248 'cd /home/administrator/proticket && docker-compose up -d'
+    - name: Copy files to VPS
+      run: scp -r ./* root@92.118.56.248:/home/administrator/prueba/pro-ticket-backend
+
+    - name: Deploy with Docker Compose
+      run: |
+        ssh root@92.118.56.248 << 'EOF'
+          cd /home/administrator/prueba/pro-ticket-backend
+          docker-compose down
+          docker-compose up -d
+        EOF
